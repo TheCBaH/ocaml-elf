@@ -12,6 +12,7 @@
             "userGid": "1000",
             "upgradePackages": "false"
         },
+        "ghcr.io/devcontainers/features/sshd:1": {},
         "ghcr.io/thecbah/ocaml-features/ocaml:1": {
             "version": "${localEnv:OCAML_VERSION}",
             "packages": "ocamlformat#0.28.1 js_of_ocaml-compiler",
@@ -30,6 +31,6 @@
     "remoteUser": "vscode",
     // Pins err_trace from GitHub through elf.opam's pin-depends, so CI and local containers
     // use the same commit.
-    "postCreateCommand": "make deps",
+    "postCreateCommand": "sudo .devcontainer/fix-opam-owner.sh $(id -u) $(id -g) && make deps",
     "waitFor": "postCreateCommand"
 }
