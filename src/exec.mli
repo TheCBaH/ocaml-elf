@@ -48,6 +48,12 @@ type range = { range : range_of; start : int64; length : int64 }
 type shared_page = { first : region; second : region; page : int64 }
 type physical_overlap = { first : region; second : region }
 type misaligned_headers = { vaddr : int64; page : int64 }
+
+type ram = { ram_start : int64; ram_size : int64 }
+(** A physical RAM window. Under a system profile every segment and the mapped headers must lie
+    inside it. *)
+
+type outside_ram = { where : region; paddr : int64; length : int64; ram : ram }
 type name_kind = [ `Section | `Symbol ]
 type bad_name = { kind : name_kind; name : string }
 type symbol_section = { symbol : string; section : string }
@@ -67,6 +73,7 @@ type error =
   | `Headers_misaligned of misaligned_headers
   | `Entry_not_executable of int64
     (** the entry is not inside the initialized part of an executable segment *)
+  | `Outside_ram of outside_ram
   | `Duplicate_section of string
   | `Bad_name of bad_name  (** a NUL in a section or symbol name *)
   | `Unknown_symbol_section of symbol_section
@@ -114,9 +121,14 @@ val place :
 type layout
 (** A validated, normalized spec: segments sorted by address with their computed sizes. *)
 
-val validate : spec -> (layout, error list) Err.t
-(** Checks the whole spec and reports every problem, in the order: each segment, then the checks
-    across segments, then names and symbols. *)
+val riscv_virt_ram : ram
+(** QEMU's RISC-V [virt] machine started with [-m 128M]: [0x8000_0000, +128 MiB). *)
 
-val build : spec -> (string, error) Err.t
+val validate : ?ram:ram -> spec -> (layout, error list) Err.t
+(** Checks the whole spec and reports every problem, in the order: each segment, then the checks
+    across segments, then names and symbols. With [ram], every segment's physical range and the
+    mapped headers must also lie inside that window ([`Outside_ram]); [paddr] is the load address,
+    so it is the [paddr] that is checked. *)
+
+val build : ?ram:ram -> spec -> (string, error) Err.t
 (** The ELF file. A spec that fails {!validate} gives [`Invalid_spec]. *)

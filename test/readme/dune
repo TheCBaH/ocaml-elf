@@ -1,0 +1,19 @@
+; The README's example is compiled and run here, so it cannot go stale: the
+; module is generated from the first ocaml block of README.md.
+
+(executable
+ (name extract)
+ (modules extract))
+
+(rule
+ (targets readme_example.ml)
+ (deps ../../README.md)
+ (action
+  (with-stdout-to
+   readme_example.ml
+   (run ./extract.exe ../../README.md))))
+
+(test
+ (name test_readme)
+ (modules readme_example test_readme)
+ (libraries elf elf.unix elf_test_support err_trace unix))

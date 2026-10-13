@@ -22,7 +22,6 @@ M0.4–M0.7 (repository files, devcontainer, CI, host integration), then M3 and 
 
 | What | Blocks | Resolution |
 | --- | --- | --- |
-| `qemu-system-riscv32/64` absent: Debian ships them in `qemu-system-misc`, which this repository's devcontainer does not install | M3.5 (and RV system runs generally) | M3.1: add `qemu-system-misc` to the devcontainer(s) |
 | x86-64 system-mode route undecided | M4.9 | Q3 |
 
 ## Status
@@ -34,10 +33,10 @@ M0.4–M0.7 (repository files, devcontainer, CI, host integration), then M3 and 
 | M0.1 | dune project and opam metadata | done | err_trace pinned at `v0.0.1` via `pin-depends`; package name `elf` pending Q1 |
 | M0.2 | Formatting | done | `.ocamlformat` copied from `asm/`; `@fmt` clean |
 | M0.3 | Makefile | done | |
-| M0.4 | Repository files | todo | License: `dune-project` says MIT, to be confirmed (Q8) |
-| M0.5 | Devcontainer | todo | |
-| M0.6 | GitHub Actions | todo | |
-| M0.7 | Host-repository integration | todo | |
+| M0.4 | Repository files | done | README (its example is compiled and run by `test/readme`), MIT `LICENSE` (assumed, Q8), `CHANGES.md` |
+| M0.5 | Devcontainer | draft | `.devcontainer/{Dockerfile,devcontainer.json}` written; the image build is not verified here (no Docker) |
+| M0.6 | GitHub Actions | draft | `.github/workflows/ci.yml` written; actionlint is not installed here, so it is unlinted and unrun |
+| M0.7 | Host-repository integration | draft | root `.github/workflows/elf.yml`, `CLAUDE.md` section and `elf-ci`/`elf-test-gnu` Makefile targets written in the host repository, not committed there |
 | M0.8 | Test skeleton | done | `test/support/check`, `test/js` (`@test-js`), `inspect.t` cram |
 
 ### M1. Codecs and decoder
@@ -76,11 +75,11 @@ M0.4–M0.7 (repository files, devcontainer, CI, host integration), then M3 and 
 
 | ID | Task | Status | Notes |
 | --- | --- | --- | --- |
-| M3.1 | `qemu-system-misc` | todo | |
-| M3.2 | Startup contract | todo | |
-| M3.3 | System placement profile | todo | |
-| M3.4 | System payload | todo | |
-| M3.5 | QEMU system run | blocked | Needs M3.1 |
+| M3.1 | `qemu-system-riscv` | done | `qemu-system-riscv` added to `elf/.devcontainer/Dockerfile` and the root Dockerfile (the package is `qemu-system-riscv` in Debian 13, not `qemu-system-misc`). Here it is not installed system-wide: the identical-version .deb was extracted under /tmp and put on PATH |
+| M3.2 | Startup contract | done | startup contract is in design §7 |
+| M3.3 | System placement profile | done | `Exec.ram`, `riscv_virt_ram`, `validate ?ram`, `Outside_ram`; unit tests in `test_exec` |
+| M3.4 | System payload | done | `payload_riscv.ml` system mode (trap stub at a fixed offset so mtvec needs no relocation); stack segment in `Spec` |
+| M3.5 | QEMU system run | done | `run_system.ml`: 4 variants exit 0; controls 11, 13 and 0x7f (illegal instruction → trap stub). Run with the extracted qemu-system-riscv32 10.0.13 |
 
 ### M4. The other five architectures
 
@@ -155,3 +154,4 @@ Q1–Q6 are design §12. Q7 and Q8 are tracker-only.
 - 2026-10-13: M1.12 done: GAS objects for all six architectures agree with readelf.
 - 2026-10-13: M2.4–M2.6 done: Exec validate, place and build.
 - 2026-10-13: M2.3 and M2.7–M2.10 done: RV32 user-mode matrix passes under qemu-riscv32 (8 runs, 2 negative controls).
+- 2026-10-13: M3 done: RV32 virt system mode passes under qemu-system-riscv32 10.0.13 (4 runs, 3 controls).

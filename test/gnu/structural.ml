@@ -58,7 +58,11 @@ let check (tools : T.tools) (s : Spec.t) (_ : Exec.spec) ~dir ~text ~aux =
   let is64 = s.target.elf_class = Types.Elf64 in
   let ehsize = if is64 then 64 else 52 and phentsize = if is64 then 56 else 32 in
   let riscv = s.arch = Riscv32 || s.arch = Riscv64 in
-  let phnum = 5 + 1 + 1 + 1 + if riscv then 1 else 0 in
+  let system = s.kind = `System in
+  (* loads: five regions (six with a stack), the headers; PHDR; GNU_STACK in user mode only *)
+  let phnum =
+    (if system then 6 else 5) + 1 + 1 + (if system then 0 else 1) + if riscv then 1 else 0
+  in
   let hsize = Int64.of_int (ehsize + (phnum * phentsize)) in
   let page = if s.arch = Aarch64 then 0x10000L else 0x1000L in
   (* Header. *)
@@ -91,8 +95,10 @@ let check (tools : T.tools) (s : Spec.t) (_ : Exec.spec) ~dir ~text ~aux =
       load s.rodata 8L 8L "R";
       load s.data (Int64.of_int s.data_init) (Int64.add (Int64.of_int s.data_init) s.data_zero) "RW";
       load s.bss 0L s.bss_size "RW";
-      ("GNU_STACK", 0L, 0L, 0L, "RW", 0x10L);
     ]
+    @
+    if system then [ load s.stack 0L s.stack_size "RW" ]
+    else [ ("GNU_STACK", 0L, 0L, 0L, "RW", 0x10L) ]
   in
   let row (p : R.segment) = (p.ptype, p.vaddr, p.filesz, p.memsz, p.pflags, p.palign) in
   let describe (t, v, f, m, fl, a) =
@@ -133,6 +139,7 @@ let check (tools : T.tools) (s : Spec.t) (_ : Exec.spec) ~dir ~text ~aux =
     sec_expect ".data" "PROGBITS" "WA" s.data (Int64.of_int s.data_init);
     sec_expect ".bss.data" "NOBITS" "WA" (Int64.add s.data (Int64.of_int s.data_init)) s.data_zero;
     sec_expect ".bss" "NOBITS" "WA" s.bss s.bss_size;
+    if system then sec_expect ".stack" "NOBITS" "WA" s.stack s.stack_size;
     sec_expect ".symtab" "SYMTAB" "" 0L (Int64.of_int ((if is64 then 24 else 16) * 5));
     List.iter
       (fun n ->

@@ -23,11 +23,11 @@ let check_relocation_free name (d : Decode.t) payload_sections =
             name s.name d.sections.(target).name)
     d.sections
 
-let build (module P : Payload.S) ~name ~target ~variant ~control =
+let build ?(kind = `User) (module P : Payload.S) ~name ~target ~variant ~control =
   match T.find ~abi:variant.Spec.abi P.arch with
   | Error _ as e -> e
   | Ok tools ->
-      let spec = Spec.make target variant in
+      let spec = Spec.make ~kind ~control target variant in
       let dir = T.artifacts name in
       let src = Filename.concat dir "payload.s" and obj = Filename.concat dir "payload.o" in
       write src (P.source spec);
@@ -42,13 +42,43 @@ let build (module P : Payload.S) ~name ~target ~variant ~control =
         | None -> Check.failf "%s: the object has no %s" name n
       in
       let text = section ".text.main" and aux = section ".text.aux" in
-      let exec = Spec.exec_spec ~control spec ~text ~aux in
+      let exec = Spec.exec_spec spec ~text ~aux in
       let prog = Filename.concat dir "prog" in
-      let bytes = ok Exec.pp_error "build" (Exec.build exec) in
+      let bytes = ok Exec.pp_error "build" (Exec.build ?ram:(Spec.ram spec) exec) in
       ok Elf_unix.pp_error "write" (Elf_unix.write_executable prog bytes);
       Ok (tools, spec, exec, dir, text, aux)
 
 let run_user (tools : T.tools) ~dir file =
   let status, out, err = T.run [ "timeout"; "10"; tools.qemu_user; file ] in
+  write (Filename.concat dir "qemu.out") (out ^ err);
+  { status; file; dir }
+
+(* The machine and loading route per architecture (design §7). *)
+let system_command (tools : T.tools) (arch : Target.arch) file =
+  let qemu = Option.value tools.qemu_system ~default:"qemu-system" in
+  match arch with
+  | Riscv32 | Riscv64 ->
+      [
+        qemu;
+        "-M";
+        "virt";
+        "-smp";
+        "1";
+        "-m";
+        "128M";
+        "-bios";
+        "none";
+        "-nographic";
+        "-monitor";
+        "none";
+        "-serial";
+        "none";
+        "-device";
+        "loader,file=" ^ file ^ ",cpu-num=0";
+      ]
+  | _ -> Check.failf "no system-mode command for this architecture yet"
+
+let run_system (tools : T.tools) arch ~dir file =
+  let status, out, err = T.run ("timeout" :: "20" :: system_command tools arch file) in
   write (Filename.concat dir "qemu.out") (out ^ err);
   { status; file; dir }

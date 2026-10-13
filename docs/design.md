@@ -487,10 +487,28 @@ a failure code rather than hanging), and which registers it may assume. The
 generic loader supplies no Linux, OpenSBI or device-tree arguments, so startup
 must not depend on them.
 
+**RISC-V `virt` startup contract** (validated by `test/gnu/run_system.ml`):
+
+- Command: `qemu-system-riscv32 -M virt -smp 1 -m 128M -bios none -nographic -monitor none
+  -serial none -device loader,file=FILE,cpu-num=0`. The loader places each `PT_LOAD` at its `paddr`
+  and sets the PC to `e_entry`.
+- The core starts in M-mode at `e_entry`, with no firmware and no device tree. Startup must not
+  rely on `a0`/`a1`, or on any register.
+- RAM is `[0x8000_0000, +128 MiB)`; `Exec.riscv_virt_ram` is that window, and `Exec.validate
+  ~ram` rejects a segment or mapped headers outside it (`` `Outside_ram ``). With no MMU,
+  `paddr = vaddr`.
+- Startup sets `sp` to the top of a stack reserved in a read/write zero-fill segment (16-byte
+  aligned) and `mtvec` to a trap stub (direct mode, 4-aligned). The stub reports failure code
+  `0x7f`, so a stray trap fails instead of hanging.
+- Termination is the SiFive test device at `0x10_0000`: writing `0x5555` exits QEMU with status 0,
+  and `(code << 16) | 0x3333` exits with status `code`.
+- Zero fill: QEMU's loader supplies `memsz - filesz` zero bytes. Checks 13–16 and the dirty
+  zero-fill control confirm it, so startup does not clear `.bss`.
+
 **Environment note.** The current devcontainer has all six user-mode QEMUs and
 `qemu-system-{aarch64,arm,i386,x86_64}`, but **no `qemu-system-riscv32/64`**,
-because Debian ships those in `qemu-system-misc`, which is not installed. The
-standalone devcontainer installs `qemu-system-misc`. Until then, RV32 system
+because Debian ships those in `qemu-system-riscv`, which is not installed. The
+standalone devcontainer installs `qemu-system-riscv`. Until then, RV32 system
 mode (milestone 3) cannot be executed here.
 
 ## 8. Requirements traced to the ELF and psABI specifications
@@ -661,7 +679,7 @@ an open question.
 - Cross **binutils only**, no cross GCC: `binutils-{i686,x86-64,arm,aarch64,riscv64}-linux-gnu*`.
   RV32 uses `riscv64-linux-gnu-as -march=rv32…` and `ld -m elf32lriscv`, so the
   separate RV32 toolchain this repository installs is unnecessary.
-- `qemu-user`, `qemu-system-arm`, `qemu-system-x86`, and `qemu-system-misc` (for
+- `qemu-user`, `qemu-system-arm`, `qemu-system-x86`, and `qemu-system-riscv` (for
   RISC-V).
 
 **CI** (`elf/.github/workflows/ci.yml`):
@@ -699,7 +717,7 @@ Each milestone is accepted only with the external checks in §9.
    - readelf/lint/objdump checks and `qemu-riscv32`.
 3. **RV32 `virt` system mode.**
    - Startup contract, SiFive-test termination, and generic-loader route.
-   - Requires `qemu-system-misc` (§7).
+   - Requires `qemu-system-riscv` (§7).
 4. **The other five architectures.**
    - User mode first, using the §9.3 matrix with each architecture's payload
      generator.

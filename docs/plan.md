@@ -148,7 +148,7 @@ elf/
 - **Files:** `.devcontainer/devcontainer.json`, `.devcontainer/Dockerfile`.
 - **Dockerfile** (Debian 13), apt packages:
   - `binutils-i686-linux-gnu binutils-x86-64-linux-gnu binutils-arm-linux-gnueabihf binutils-aarch64-linux-gnu binutils-riscv64-linux-gnu`
-  - `qemu-user qemu-system-arm qemu-system-x86 qemu-system-misc`
+  - `qemu-user qemu-system-arm qemu-system-x86 qemu-system-riscv`
   - `nodejs make git ca-certificates curl`
   - Cross packages are installed only where the host architecture provides
     them. The toolchain targets skip what is absent.
@@ -741,7 +741,7 @@ elf/
 
 ## M3. RV32 `virt` system mode
 
-### M3.1 `qemu-system-misc`
+### M3.1 `qemu-system-riscv`
 
 Add it to `elf/.devcontainer/Dockerfile` (M0.5) and, for the host
 repository's CI, to the root `.devcontainer/Dockerfile`. Confirm
@@ -970,5 +970,5 @@ M1.11 + M5.1 ─ M5.2..M5.4        M2.6 ─ M5.5        M2.6 + M4.* ─ M7
 8. M2.1–M2.3.
 9. M2.4–M2.6.
 10. M2.7–M2.10.
-11. Then M3 and M4 in either order, depending on `qemu-system-misc`
+11. Then M3 and M4 in either order, depending on `qemu-system-riscv`
     availability.

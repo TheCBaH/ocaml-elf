@@ -13,7 +13,11 @@ let name_of arch (v : Elf_gnu.Spec.variant) control =
     (Format.asprintf "%a" Target.pp_arch arch)
     v.abi (Printf.sprintf "%Lx" v.base)
     (if v.sections then "-sections" else "-bare")
-    (match control with `None -> "" | `Flip_rodata -> "-flip" | `Dirty_zero_fill -> "-dirty")
+    (match control with
+    | `None -> ""
+    | `Flip_rodata -> "-flip"
+    | `Dirty_zero_fill -> "-dirty"
+    | `Illegal_instruction -> "-trap")
 
 let expect_status ~payload ~target ~variant ~control ~expected =
   let (module P : Elf_gnu.Payload.S) = payload in

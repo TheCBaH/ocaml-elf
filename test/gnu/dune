@@ -16,8 +16,8 @@
  (libraries elf elf.unix elf_test_support unix))
 
 (executables
- (names test_objects test_isa run_user)
- (modules test_objects test_isa run_user)
+ (names test_objects test_isa run_user run_system)
+ (modules test_objects test_isa run_user run_system)
  (libraries elf elf.unix elf_test_support elf_gnu err_trace unix))
 
 (rule
@@ -29,9 +29,10 @@
    (run ./test_isa.exe)
    (run ./run_user.exe))))
 
-; Placeholder so `make test-system` has an alias until the system-mode tests exist.
+;; System-mode tests: bare metal under qemu-system-*.
 
 (rule
  (alias test-system)
+ (deps run_system.exe)
  (action
-  (echo "no system-mode tests yet\n")))
+  (run ./run_system.exe)))

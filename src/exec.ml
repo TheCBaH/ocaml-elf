@@ -46,6 +46,8 @@ type range = { range : range_of; start : int64; length : int64 }
 type shared_page = { first : region; second : region; page : int64 }
 type physical_overlap = { first : region; second : region }
 type misaligned_headers = { vaddr : int64; page : int64 }
+type ram = { ram_start : int64; ram_size : int64 }
+type outside_ram = { where : region; paddr : int64; length : int64; ram : ram }
 type name_kind = [ `Section | `Symbol ]
 type bad_name = { kind : name_kind; name : string }
 type symbol_section = { symbol : string; section : string }
@@ -63,6 +65,7 @@ type error =
   | `Physical_overlap of physical_overlap
   | `Headers_misaligned of misaligned_headers
   | `Entry_not_executable of int64
+  | `Outside_ram of outside_ram
   | `Duplicate_section of string
   | `Bad_name of bad_name
   | `Unknown_symbol_section of symbol_section
@@ -111,6 +114,9 @@ let rec pp_error ppf : error -> unit = function
   | `Entry_not_executable e ->
       Format.fprintf ppf
         "entry point %a is not inside the initialized part of an executable segment" U64.pp e
+  | `Outside_ram { where; paddr; length; ram } ->
+      Format.fprintf ppf "%a at physical %a + %a lies outside RAM [%a, +%a)" pp_region where U64.pp
+        paddr U64.pp length U64.pp ram.ram_start U64.pp ram.ram_size
   | `Duplicate_section n -> Format.fprintf ppf "section name %S is used twice" n
   | `Bad_name { kind; name } ->
       Format.fprintf ppf "%s name %S contains a NUL byte"
@@ -320,7 +326,7 @@ let header_name_checks (spec : spec) =
     add (fun () -> fail `Symbols_without_sections);
   List.rev !checks
 
-let cross_checks (spec : spec) shape hsize loads =
+let cross_checks ?ram (spec : spec) shape hsize loads =
   let t = spec.target in
   let page = t.max_page_size in
   let checks = ref [] in
@@ -388,6 +394,22 @@ let cross_checks (spec : spec) shape hsize loads =
          | _ -> ());
          match far with Some (_, fhi) when U64.le hi fhi -> far | _ -> Some (r, hi))
        None physical);
+  (* Under a system profile, everything must be loadable into RAM. *)
+  (match ram with
+  | None -> ()
+  | Some r ->
+      List.iter
+        (fun (where, _, paddr, length) ->
+          let inside =
+            length = 0L
+            || U64.le r.ram_start paddr
+               &&
+               match (U64.add paddr length, U64.add r.ram_start r.ram_size) with
+               | Some stop, Some ram_stop -> U64.le stop ram_stop
+               | _ -> false
+          in
+          if not inside then add (fun () -> fail (`Outside_ram { where; paddr; length; ram = r })))
+        regions);
   (* The entry must be code that is present in the file. *)
   let executable =
     List.exists
@@ -400,7 +422,9 @@ let cross_checks (spec : spec) shape hsize loads =
   ignore shape;
   List.rev !checks
 
-let validate (spec : spec) =
+let riscv_virt_ram = { ram_start = 0x8000_0000L; ram_size = 0x800_0000L }
+
+let validate ?ram (spec : spec) =
   let t = spec.target in
   let page = t.max_page_size in
   let shape =
@@ -423,7 +447,7 @@ let validate (spec : spec) =
   let sorted = List.stable_sort (fun a b -> U64.compare a.ext.vaddr b.ext.vaddr) loads in
   let checks =
     List.concat_map (fun (i, seg) -> segment_checks t i seg) indexed
-    @ cross_checks spec shape hsize sorted
+    @ cross_checks ?ram spec shape hsize sorted
     @ header_name_checks spec
   in
   let r = Err.Accum.iter (fun f -> f ()) checks in
@@ -870,9 +894,11 @@ let assemble l =
            });
       Bytes.to_string b)
 
-let build spec =
+let build ?ram spec =
   match
-    Err.map_error ~pos:__POS__ ~pp_error (fun errs -> (`Invalid_spec errs : error)) (validate spec)
+    Err.map_error ~pos:__POS__ ~pp_error
+      (fun errs -> (`Invalid_spec errs : error))
+      (validate ?ram spec)
   with
   | Error _ as e -> e
   | Ok l -> assemble l

@@ -7,12 +7,12 @@ let rv64 = Target.riscv Riscv.rv64imafd_lp64d
 let pp_any ppf _ = Format.pp_print_string ppf "<value>"
 let pp_i64 ppf v = Format.fprintf ppf "0x%Lx" v
 let sample = Sample.spec rv32
-let problems spec = match validate spec with Ok _ -> [] | Error e -> Err.Error.kind e
+let problems ?ram spec = match validate ?ram spec with Ok _ -> [] | Error e -> Err.Error.kind e
 let show errs = String.concat "; " (List.map (fun e -> Format.asprintf "%a" pp_error e) errs)
 
 (* The spec fails with exactly one error, and it satisfies [pred]. *)
-let only what (pred : error -> bool) spec =
-  match problems spec with
+let only ?ram what (pred : error -> bool) spec =
+  match problems ?ram spec with
   | [ e ] -> if not (pred e) then Check.failf "%s: wrong error: %a" what pp_error e
   | [] -> Check.failf "%s: expected an error, the spec was accepted" what
   | errs -> Check.failf "%s: expected one error, got %d: %s" what (List.length errs) (show errs)
@@ -23,8 +23,8 @@ let first what (pred : error -> bool) spec =
   | e :: _ -> if not (pred e) then Check.failf "%s: wrong first error: %a" what pp_error e
   | [] -> Check.failf "%s: expected an error, the spec was accepted" what
 
-let accepted what spec =
-  match problems spec with [] -> () | errs -> Check.failf "%s: rejected: %s" what (show errs)
+let accepted ?ram what spec =
+  match problems ?ram spec with [] -> () | errs -> Check.failf "%s: rejected: %s" what (show errs)
 
 let map_segment i f (spec : spec) =
   { spec with segments = List.mapi (fun j s -> if i = j then f s else s) spec.segments }
@@ -231,6 +231,41 @@ let () =
             (sample
             |> map_segment 0 (fun s -> { s with paddr = Some 0x10_0000L })
             |> map_segment 1 (fun s -> { s with paddr = Some 0x10_0010L })));
+      Check.case "Outside_ram" (fun () ->
+          let ram = riscv_virt_ram in
+          accepted ~ram "inside" (Sample.spec ~base:0x8000_0000L rv32);
+          accepted "no window, no check" (Sample.spec rv32);
+          (* Every region of the low-address sample is outside the window. *)
+          (match problems ~ram (Sample.spec rv32) with
+          | `Outside_ram { where = `Headers; _ } :: _ as errs ->
+              Check.equal ~pp:Format.pp_print_int "one per region" 6 (List.length errs)
+          | errs -> Check.failf "unexpected: %s" (show errs));
+          (* The last page of RAM is inside; one more byte is not. *)
+          let last size = { (text_only rv32 0x87ff_f000L size) with headers = Unmapped } in
+          accepted ~ram "last page" (last 0x1000);
+          only ~ram "one byte past the end"
+            (function
+              | `Outside_ram { where = `Segment 0; paddr = 0x87ff_f000L; length = 0x1001L; _ } ->
+                  true
+              | _ -> false)
+            (last 0x1001);
+          (* The physical address is what counts: a high virtual address loaded into RAM is fine. *)
+          accepted ~ram "paddr inside"
+            (map_segment 0
+               (fun s -> { s with paddr = Some 0x8000_0000L })
+               (text_only rv32 0x40_0000L 16));
+          only ~ram "paddr outside"
+            (function
+              | `Outside_ram { where = `Segment 0; paddr = 0x40_0000L; _ } -> true | _ -> false)
+            (map_segment 0
+               (fun s -> { s with paddr = Some 0x40_0000L })
+               (text_only rv32 0x8000_0000L 16));
+          only ~ram "headers outside"
+            (function `Outside_ram { where = `Headers; _ } -> true | _ -> false)
+            {
+              (text_only rv32 0x8000_1000L 16) with
+              headers = Mapped { vaddr = 0x7fff_f000L; paddr = None };
+            });
       Check.case "Headers_misaligned" (fun () ->
           only "headers"
             (function

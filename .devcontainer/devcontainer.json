@@ -1,0 +1,35 @@
+// For format details, see https://aka.ms/devcontainer.json.
+{
+    "name": "elf devcontainer",
+    "build": {
+        "dockerfile": "Dockerfile"
+    },
+    "features": {
+        "ghcr.io/devcontainers/features/common-utils:2": {
+            "installZsh": "true",
+            "username": "vscode",
+            "userUid": "1000",
+            "userGid": "1000",
+            "upgradePackages": "false"
+        },
+        "ghcr.io/thecbah/ocaml-features/ocaml:1": {
+            "version": "${localEnv:OCAML_VERSION}",
+            "packages": "ocamlformat#0.28.1 js_of_ocaml-compiler",
+            // Melange requires 'ocaml >= 4.14 & < 4.15', so it is installable on the 4.14
+            // images only; the same devcontainer.json builds 4.14.3 through 5.x.
+            "optional-packages": "melange"
+        }
+    },
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ocamllabs.ocaml-platform"
+            ]
+        }
+    },
+    "remoteUser": "vscode",
+    // Pins err_trace from GitHub through elf.opam's pin-depends, so CI and local containers
+    // use the same commit.
+    "postCreateCommand": "make deps",
+    "waitFor": "postCreateCommand"
+}

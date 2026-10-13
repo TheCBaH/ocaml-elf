@@ -1,6 +1,8 @@
 open Elf
 
 type variant = { base : int64; sections : bool; abi : string }
+type kind = [ `User | `System ]
+type control = [ `None | `Flip_rodata | `Dirty_zero_fill | `Illegal_instruction ]
 type markers = { rodata : int32; data : int32; aux : int32; store : int32 }
 
 type t = {
@@ -16,13 +18,15 @@ type t = {
   data_zero : int64;
   bss_size : int64;
   markers : markers;
+  kind : kind;
+  control : control;
+  stack : int64;
+  stack_size : int64;
 }
-
-type control = [ `None | `Flip_rodata | `Dirty_zero_fill ]
 
 let arch_of (t : Target.t) = t.arch
 
-let make target variant =
+let make ?(kind = `User) ?(control = `None) target variant =
   let at k = Int64.add variant.base (Int64.mul 0x10000L (Int64.of_int k)) in
   {
     arch = arch_of target;
@@ -36,6 +40,10 @@ let make target variant =
     data_init = 0x100;
     data_zero = 0x3000L;
     bss_size = 0x2000L;
+    kind;
+    control;
+    stack = at 6;
+    stack_size = 0x1000L;
     (* Below 0x8000_0000, so a sign-extending 32-bit load cannot change a comparison. *)
     markers =
       { rodata = 0x1234_5678l; data = 0x2badf00dl; aux = 0x0a0b_0c0dl; store = 0x3c3c_3c3cl };
@@ -59,7 +67,8 @@ let symbols t ~text ~aux =
     sym "data_marker" t.data 4 `Object ".data";
   ]
 
-let exec_spec ?(control = `None) t ~text ~aux =
+let exec_spec t ~text ~aux =
+  let control = t.control in
   let endian = t.target.endianness in
   let ro = { Exec.read = true; write = false; execute = false } in
   let rx = { ro with execute = true } in
@@ -85,27 +94,45 @@ let exec_spec ?(control = `None) t ~text ~aux =
           section ".bss.data" zero_at (Exec.Zero t.data_zero);
         ]
   in
+  let stack_segments =
+    match t.kind with
+    | `User -> []
+    | `System ->
+        [
+          {
+            Exec.perms = rw;
+            paddr = None;
+            sections = [ section ".stack" t.stack (Exec.Zero t.stack_size) ];
+          };
+        ]
+  in
+  let main_segments : Exec.segment list =
+    [
+      { perms = rx; paddr = None; sections = [ section ".text" t.text (Exec.Bytes text) ] };
+      { perms = rx; paddr = None; sections = [ section ".text.aux" t.aux (Exec.Bytes aux) ] };
+      {
+        perms = ro;
+        paddr = None;
+        sections =
+          [
+            section ".rodata" t.rodata (Exec.Bytes (word endian rodata_marker ^ "\000\000\000\000"));
+          ];
+      };
+      { perms = rw; paddr = None; sections = mixed };
+      { perms = rw; paddr = None; sections = [ section ".bss" t.bss (Exec.Zero t.bss_size) ] };
+    ]
+  in
   {
     Exec.target = t.target;
     entry = t.text;
     headers = Exec.Mapped { vaddr = t.variant.base; paddr = None };
-    gnu_stack = Some rw;
+    gnu_stack = (match t.kind with `User -> Some rw | `System -> None);
     section_headers = t.variant.sections;
     symbols = (if t.variant.sections then symbols t ~text ~aux else []);
-    segments =
-      [
-        { perms = rx; paddr = None; sections = [ section ".text" t.text (Exec.Bytes text) ] };
-        { perms = rx; paddr = None; sections = [ section ".text.aux" t.aux (Exec.Bytes aux) ] };
-        {
-          perms = ro;
-          paddr = None;
-          sections =
-            [
-              section ".rodata" t.rodata
-                (Exec.Bytes (word endian rodata_marker ^ "\000\000\000\000"));
-            ];
-        };
-        { perms = rw; paddr = None; sections = mixed };
-        { perms = rw; paddr = None; sections = [ section ".bss" t.bss (Exec.Zero t.bss_size) ] };
-      ];
+    segments = main_segments @ stack_segments;
   }
+
+let ram t =
+  match (t.kind, t.arch) with
+  | `System, (Target.Riscv32 | Target.Riscv64) -> Some Exec.riscv_virt_ram
+  | _ -> None

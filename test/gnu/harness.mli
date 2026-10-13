@@ -7,6 +7,7 @@ type run = {
 }
 
 val build :
+  ?kind:Spec.kind ->
   (module Payload.S) ->
   name:string ->
   target:Elf.Target.t ->
@@ -22,3 +23,8 @@ val build :
 
 val run_user : Toolchain.tools -> dir:string -> string -> run
 (** Runs the executable under QEMU user mode with a 10 second limit. *)
+
+val run_system : Toolchain.tools -> Elf.Target.arch -> dir:string -> string -> run
+(** Runs the executable under [qemu-system-*] on its standard machine with a 20 second limit.
+    [status] is the QEMU exit status: 0 for a passing payload, the failing check's code otherwise
+    (124 means [timeout] killed a hang). *)

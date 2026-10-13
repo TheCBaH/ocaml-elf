@@ -1,0 +1,70 @@
+name: ci
+
+# Formatting, build and the portable suite on every leg; the GNU/QEMU tests on the 64-bit legs,
+# which are the ones whose images carry the cross binutils and QEMU. The two 32-bit legs are the
+# ones that prove 31-bit native-int safety.
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  matrix:
+    runs-on: ubuntu-slim
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
+    steps:
+    - name: matrix
+      id: matrix
+      run: |
+        python3 - <<'EOF2'
+        import json, os
+        matrix = []
+        for ver in ["4.14.3", "5.4.1"]:
+            matrix.append({"os": "ubuntu-24.04",     "ocaml_version": ver, "platform": "linux/amd64"})
+            matrix.append({"os": "ubuntu-24.04-arm", "ocaml_version": ver, "platform": "linux/arm64"})
+        matrix.append({"os": "ubuntu-24.04",     "ocaml_version": "4.14.3", "platform": "linux/i386"})
+        matrix.append({"os": "ubuntu-24.04-arm", "ocaml_version": "4.14.3", "platform": "linux/arm/v7"})
+        with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+            f.write("matrix<<__OUTPUT__\n%s\n__OUTPUT__\n" % json.dumps(matrix))
+        EOF2
+  ci:
+    needs: matrix
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJson(needs.matrix.outputs.matrix) }}
+    steps:
+    - name: checkout
+      uses: actions/checkout@v7
+    - name: devcontainer
+      uses: TheCBaH/devcontainer-action/devcontainer@v1
+      id: devcontainer
+      env:
+        OCAML_VERSION: ${{ matrix.ocaml_version }}
+      with:
+        variant: ${{ matrix.ocaml_version }}
+        platform: ${{ matrix.platform }}
+    - name: setup
+      run: |
+        echo 'EXEC=${{ steps.devcontainer.outputs.exec }}' >> $GITHUB_ENV
+    - name: fmt-check
+      run: |
+        ${{ env.EXEC }} make fmt-check
+    - name: build
+      run: |
+        ${{ env.EXEC }} make build
+    - name: test
+      run: |
+        ${{ env.EXEC }} make test
+    # The image installs Node for the 64-bit hosts only.
+    - name: test-js
+      if: matrix.platform != 'linux/i386' && matrix.platform != 'linux/arm/v7'
+      run: |
+        ${{ env.EXEC }} make test-js
+    - name: test-gnu and test-system
+      if: matrix.platform != 'linux/i386' && matrix.platform != 'linux/arm/v7'
+      run: |
+        ${{ env.EXEC }} env ELF_REQUIRE_TOOLCHAIN=1 make test-gnu test-system
