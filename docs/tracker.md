@@ -48,9 +48,9 @@ settled. Whether to keep it as the starting point or delete it is open (Q7).
 | ID | Task | Status | Notes |
 | --- | --- | --- | --- |
 | M1.1 | `U64` | done | `test/unit/test_u64.ml` |
-| M1.2 | `Types`, `Const` | draft | `src/types.ml`, `src/const.ml`; name printers missing |
-| M1.3 | `Codec` | draft | `src/codec.ml`; all records, both classes and byte orders |
-| M1.4 | `Encode` | draft | `src/encode.ml{,i}`; closed error row; record payload `overflow` |
+| M1.2 | `Types`, `Const` | done | `names.ml{,i}`; test enumerates every Const name |
+| M1.3 | `Codec` | done | `test_codec`; Codec stays private, tests compile its source via `copy_files` |
+| M1.4 | `Encode` | done | `test_encode`; message pinned in `errors.t` |
 | M1.5 | `Decode` core | draft | `src/decode.ml{,i}`; extended numbering included |
 | M1.6 | `Decode` accessors | draft | Symbols (+ `SYMTAB_SHNDX`), relocations and notes drafted; `attributes` accessor missing |
 | M1.7 | `Strtab` | todo | |
@@ -151,3 +151,4 @@ Q1–Q6 are design §12. Q7 and Q8 are tracker-only.
   interfaces, algorithms, test cases and a commit sequence; task IDs are
   unchanged.
 - 2026-10-13: M0.1–M0.3, M0.8 and M1.1 done; draft M1 code kept (Q7).
+- 2026-10-13: M1.2–M1.4 done.

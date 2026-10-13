@@ -1,3 +1,11 @@
+; Codec is a private module of the elf library. The tests need its unchecked
+; writers (to build deliberately malformed files), so the source is compiled a
+; second time here, against the public Types and Const modules.
+
+(copy_files ../../src/codec.ml)
+
 (library
  (name elf_test_support)
+ (flags
+  (:standard -open Elf))
  (libraries elf err_trace))

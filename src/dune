@@ -6,4 +6,5 @@
 (library
  (name elf)
  (public_name elf)
+ (private_modules codec)
  (libraries err_trace))

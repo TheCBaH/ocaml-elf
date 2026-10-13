@@ -1,15 +1,19 @@
 ; js_of_ocaml build of the unit suites, run under node by @test-js. The sources
-; are the same files `make test` runs natively.
+; are the same files `make test` runs natively. Keep `names` in step with
+; ../unit/dune.
 
 (copy_files ../unit/test_*.ml)
 
 (executables
- (names test_u64)
+ (names test_u64 test_names test_codec test_encode)
  (modes js)
+ (flags
+  (:standard -open Elf))
  (libraries elf elf_test_support err_trace))
 
 (rule
  (alias test-js)
- (deps test_u64.bc.js)
+ (deps
+  (glob_files *.bc.js))
  (action
-  (run node test_u64.bc.js)))
+  (system "for f in *.bc.js; do node $f || exit 1; done")))

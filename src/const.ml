@@ -68,7 +68,11 @@ let shf_execinstr = 0x4L
 let shf_merge = 0x10L
 let shf_strings = 0x20L
 let shf_info_link = 0x40L
+let shf_link_order = 0x80L
+let shf_os_nonconforming = 0x100L
+let shf_group = 0x200L
 let shf_tls = 0x400L
+let shf_compressed = 0x800L
 
 (* Special section indices *)
 let shn_undef = 0

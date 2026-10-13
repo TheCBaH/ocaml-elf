@@ -1,2 +1,15 @@
+; gen.exe produces the inputs the cram tests feed to elf-inspect, so no binary
+; is checked in.
+
+(executable
+ (name gen)
+ (modules gen)
+ (libraries elf elf_test_support err_trace))
+
+(env
+ (_
+  (binaries
+   (gen.exe as gen))))
+
 (cram
- (deps %{bin:elf-inspect}))
+ (deps %{bin:elf-inspect} %{bin:gen}))
