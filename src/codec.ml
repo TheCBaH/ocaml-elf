@@ -1,3 +1,6 @@
+[@@@ai_disclosure "ai-generated"]
+[@@@ai_provider "Anthropic, OpenAI"]
+
 (* Field layouts of every fixed-size ELF record, for both classes and both byte
    orders. The readers and writers here do no validation: Decode checks bounds
    before calling a reader, and Encode checks field widths before calling a

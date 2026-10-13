@@ -1,3 +1,6 @@
+[@@@ai_disclosure "ai-generated"]
+[@@@ai_provider "Anthropic, OpenAI"]
+
 (* The payload for ARM (A32, EABI): r4 holds the code of the check in progress. Constants are built
    with movw/movt so that nothing needs a literal pool or a relocation. *)
 

@@ -1,3 +1,6 @@
+[@@@ai_disclosure "ai-generated"]
+[@@@ai_provider "Anthropic, OpenAI"]
+
 (* Stable, diff-friendly dump of a decoded ELF file: one record per line, key=value fields,
    hex for addresses. Not meant to look like readelf. *)
 

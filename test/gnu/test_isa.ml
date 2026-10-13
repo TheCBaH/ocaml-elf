@@ -1,3 +1,6 @@
+[@@@ai_disclosure "ai-generated"]
+[@@@ai_provider "Anthropic, OpenAI"]
+
 (* The named RISC-V profiles and the ISA-string builder against GNU as. *)
 
 open Elf_test_support

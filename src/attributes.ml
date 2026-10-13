@@ -1,3 +1,6 @@
+[@@@ai_disclosure "ai-generated"]
+[@@@ai_provider "Anthropic, OpenAI"]
+
 open Err.Syntax
 
 type value = Uleb of int64 | Ntbs of string | Uleb_ntbs of int64 * string

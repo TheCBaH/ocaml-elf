@@ -1,3 +1,6 @@
+[@@@ai_disclosure "ai-generated"]
+[@@@ai_provider "Anthropic, OpenAI"]
+
 (* Test input generator for the cram suites: `gen.exe <case> [FILE]`. *)
 
 open Elf

@@ -1,3 +1,6 @@
+[@@@ai_disclosure "ai-generated"]
+[@@@ai_provider "Anthropic, OpenAI"]
+
 (* The payload for x86-32 and x86-64 (AT&T syntax). The code of the check in progress is kept in
    %esi (32-bit) or %ebx (64-bit); a failed check exits with it. *)
 

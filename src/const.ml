@@ -1,3 +1,6 @@
+[@@@ai_disclosure "ai-generated"]
+[@@@ai_provider "Anthropic, OpenAI"]
+
 (* Named numeric constants. They name values; they do not restrict them: every
    field these belong to is an open integer, and decoding keeps unknown values. *)
 

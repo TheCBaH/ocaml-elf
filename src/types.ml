@@ -1,3 +1,6 @@
+[@@@ai_disclosure "ai-generated"]
+[@@@ai_provider "Anthropic, OpenAI"]
+
 (* Semantic records shared by the decoder, the encoder and the executable
    builder. Field names follow the ELF specification. Values narrower than 32
    bits are [int]; everything else is an [int64] bit pattern (see U64), so a

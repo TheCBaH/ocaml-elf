@@ -1,3 +1,6 @@
+[@@@ai_disclosure "ai-generated"]
+[@@@ai_provider "Anthropic, OpenAI"]
+
 (* Deterministic mutation fuzzing of the decoder: whatever the input, every accessor must return Ok
    or Error and never raise. ELF_FUZZ_N sets the mutations per corpus file (200 by default;
    `make fuzz` uses 100000). *)

@@ -1,3 +1,6 @@
+[@@@ai_disclosure "ai-generated"]
+[@@@ai_provider "Anthropic, OpenAI"]
+
 (** A per-architecture payload generator: assembly that checks its own loaded image. *)
 
 module type S = sig

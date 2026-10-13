@@ -1,3 +1,6 @@
+[@@@ai_disclosure "ai-generated"]
+[@@@ai_provider "Anthropic, OpenAI"]
+
 type io = { path : string; op : [ `Read | `Write | `Chmod ]; message : string }
 type error = [ `Io of io ]
 

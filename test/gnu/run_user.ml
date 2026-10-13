@@ -1,3 +1,6 @@
+[@@@ai_disclosure "ai-generated"]
+[@@@ai_provider "Anthropic, OpenAI"]
+
 (* Linux user-mode matrix: assemble a payload, build an ET_EXEC around it with Exec, check it
    against readelf/objdump and run it under qemu-<arch>. One matrix per architecture; the
    negative controls prove the checks can fail. *)

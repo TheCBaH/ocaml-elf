@@ -1,3 +1,6 @@
+[@@@ai_disclosure "ai-generated"]
+[@@@ai_provider "Anthropic, OpenAI"]
+
 (* Comparisons of a decoded file with the output of readelf -W. Mismatches are collected so one run
    reports every disagreeing field. *)
 

@@ -1,3 +1,6 @@
+[@@@ai_disclosure "ai-generated"]
+[@@@ai_provider "Anthropic, OpenAI"]
+
 type xlen = Rv32 | Rv64
 type float_abi = Soft | Single | Double | Quad
 

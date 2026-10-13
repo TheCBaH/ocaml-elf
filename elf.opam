@@ -29,6 +29,8 @@ build: [
   ]
 ]
 dev-repo: "git+https://github.com/TheCBaH/ocaml-elf.git"
+x-ai-disclosure: "ai-generated"
+x-ai-provider: "Anthropic, OpenAI"
 pin-depends: [
   ["err_trace.dev" "git+https://github.com/TheCBaH/err_trace.git#v0.0.1"]
 ]

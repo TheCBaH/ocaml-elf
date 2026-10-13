@@ -1,3 +1,6 @@
+[@@@ai_disclosure "ai-generated"]
+[@@@ai_provider "Anthropic, OpenAI"]
+
 (* The payload for AArch64: w19 holds the code of the check in progress. Constants are built with
    movz/movk, so nothing needs a literal pool or a relocation. *)
 

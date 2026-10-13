@@ -1,3 +1,6 @@
+[@@@ai_disclosure "ai-generated"]
+[@@@ai_provider "Anthropic, OpenAI"]
+
 (* The payload for RV32 and RV64. [s1] holds the code of the check in progress; a failed check
    exits with it. *)
 

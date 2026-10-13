@@ -1,3 +1,6 @@
+[@@@ai_disclosure "ai-generated"]
+[@@@ai_provider "Anthropic, OpenAI"]
+
 (* GNU-produced files (objects, static and dynamic executables, shared objects) checked in under
    test/fixtures with the readelf output recorded next to each one: Decode must agree with readelf
    on every field. Needs no toolchain; regenerate with tools/regen-fixtures.sh. *)

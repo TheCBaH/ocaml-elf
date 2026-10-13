@@ -1,3 +1,6 @@
+[@@@ai_disclosure "ai-generated"]
+[@@@ai_provider "Anthropic, OpenAI"]
+
 type t = { buf : Buffer.t; seen : (string, int64) Hashtbl.t }
 type error = [ `Nul_in_name of string ]
 

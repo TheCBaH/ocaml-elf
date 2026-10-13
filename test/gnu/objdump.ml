@@ -1,3 +1,6 @@
+[@@@ai_disclosure "ai-generated"]
+[@@@ai_provider "Anthropic, OpenAI"]
+
 let is_hex c = match c with '0' .. '9' | 'a' .. 'f' -> true | _ -> false
 
 let strip_from s marker =

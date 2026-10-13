@@ -1,3 +1,6 @@
+[@@@ai_disclosure "ai-generated"]
+[@@@ai_provider "Anthropic, OpenAI"]
+
 (* README.md's example has already run (Readme_example is linked first) and written ./hello. *)
 
 open Elf_test_support

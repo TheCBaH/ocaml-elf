@@ -1,3 +1,6 @@
+[@@@ai_disclosure "ai-generated"]
+[@@@ai_provider "Anthropic, OpenAI"]
+
 open Elf
 
 type variant = { base : int64; sections : bool; abi : string }

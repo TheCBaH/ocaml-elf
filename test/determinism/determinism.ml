@@ -1,3 +1,6 @@
+[@@@ai_disclosure "ai-generated"]
+[@@@ai_provider "Anthropic, OpenAI"]
+
 (* Prints an MD5 digest of every executable built from a fixed set of specs. Native, bytecode and
    js_of_ocaml runs must print the same lines (checked by the dune rules next to this file). *)
 

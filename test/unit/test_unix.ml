@@ -1,3 +1,6 @@
+[@@@ai_disclosure "ai-generated"]
+[@@@ai_provider "Anthropic, OpenAI"]
+
 open Elf_test_support
 
 let ok what r = Check.ok ~pp_error:Elf_unix.pp_error what r

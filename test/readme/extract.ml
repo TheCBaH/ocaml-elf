@@ -1,3 +1,6 @@
+[@@@ai_disclosure "ai-generated"]
+[@@@ai_provider "Anthropic, OpenAI"]
+
 (* Prints the first ```ocaml block of a Markdown file, then [ran], which the test refers to so the
    example is linked, and therefore run, before the test body. *)
 

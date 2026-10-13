@@ -1,3 +1,6 @@
+[@@@ai_disclosure "ai-generated"]
+[@@@ai_provider "Anthropic, OpenAI"]
+
 type arch = X86_32 | X86_64 | Arm | Aarch64 | Riscv32 | Riscv64
 
 type attributes = {

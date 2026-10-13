@@ -1,3 +1,6 @@
+[@@@ai_disclosure "ai-generated"]
+[@@@ai_provider "Anthropic, OpenAI"]
+
 type abi = { float_abi : [ `Hard | `Soft ]; attributes : Attributes.t option }
 
 let flags a =

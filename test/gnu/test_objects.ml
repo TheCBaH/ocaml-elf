@@ -1,3 +1,6 @@
+[@@@ai_disclosure "ai-generated"]
+[@@@ai_provider "Anthropic, OpenAI"]
+
 (* Decode GNU-assembled relocatable objects and compare the result with readelf. *)
 
 open Elf_test_support

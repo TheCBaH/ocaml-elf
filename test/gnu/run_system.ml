@@ -1,3 +1,6 @@
+[@@@ai_disclosure "ai-generated"]
+[@@@ai_provider "Anthropic, OpenAI"]
+
 (* Bare-metal matrix: the same payloads as run_user.ml, started on QEMU's standard machine for each
    architecture with no operating system. Each reports through the machine's exit device, and the
    startup contract per architecture is in design §7. *)
