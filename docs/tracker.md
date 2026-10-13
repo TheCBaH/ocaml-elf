@@ -58,7 +58,7 @@ settled. Whether to keep it as the starting point or delete it is open (Q7).
 | M1.9 | `elf.unix` | done | `unix/elf_unix.ml{,i}`, `test_unix` (native only) |
 | M1.10 | `elf-inspect` | done | `bin/elf_inspect.ml`; `--trace` is opt-in so golden output does not pin library line numbers; cram `inspect.t`, `errors.t` |
 | M1.11 | Malformed corpus | done | `test/unit/test_malformed.ml` (fuzz loop is M5.4) |
-| M1.12 | GAS objects | todo | |
+| M1.12 | GAS objects | done | `test/gnu/{toolchain,readelf,test_objects}.ml`; all six architectures match readelf -S/-s/-r/-A (binutils 2.44); `.gitignore` covers `gnu-artifacts` via `_build` |
 
 ### M2. RV32 static `ET_EXEC`, Linux user mode
 
@@ -155,3 +155,4 @@ Q1–Q6 are design §12. Q7 and Q8 are tracker-only.
 - 2026-10-13: M1.5–M1.8 and M1.11 done.
 - 2026-10-13: M1.9 and M1.10 done.
 - 2026-10-13: M2.1 and M2.2 done (ahead of M1.12, which needs the arch type).
+- 2026-10-13: M1.12 done: GAS objects for all six architectures agree with readelf.
