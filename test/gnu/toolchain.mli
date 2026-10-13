@@ -11,9 +11,11 @@ type tools = {
   qemu_system : string option;
 }
 
-val find : arch -> (tools, [ `Missing of string ]) result
-(** The binutils for [arch]; [`Missing tool] names the first one not on [PATH]. The QEMU binaries
-    are not checked here: see {!have}. *)
+val find : ?abi:string -> arch -> (tools, [ `Missing of string ]) result
+(** The binutils for [arch]. [abi] picks the RISC-V [-march]/[-mabi] pair: [ilp32d] (default
+    for RV32), [ilp32], [lp64d] (default for RV64) or [lp64].
+    [`Missing tool] names the first binutils program not on [PATH]. The QEMU binaries are not
+    checked here: see {!have}. *)
 
 val have : string -> bool
 (** Whether a program is on [PATH]. *)

@@ -27,7 +27,7 @@ let run argv =
   Sys.remove err;
   (status, stdout, stderr)
 
-let spec (arch : arch) =
+let spec ?abi (arch : arch) =
   let gnu prefix ~as_flags ~ld_flags ~qemu ~system =
     {
       as_ = (prefix ^ "as") :: as_flags;
@@ -52,16 +52,24 @@ let spec (arch : arch) =
       gnu "aarch64-linux-gnu-" ~as_flags:[] ~ld_flags:[] ~qemu:"qemu-aarch64"
         ~system:(Some "qemu-system-aarch64")
   | Riscv32 ->
-      gnu "riscv64-linux-gnu-"
-        ~as_flags:[ "-march=rv32imafd"; "-mabi=ilp32d" ]
-        ~ld_flags:[ "-m"; "elf32lriscv" ] ~qemu:"qemu-riscv32" ~system:(Some "qemu-system-riscv32")
+      let flags =
+        match abi with
+        | Some "ilp32" -> [ "-march=rv32im"; "-mabi=ilp32" ]
+        | _ -> [ "-march=rv32imafd"; "-mabi=ilp32d" ]
+      in
+      gnu "riscv64-linux-gnu-" ~as_flags:flags ~ld_flags:[ "-m"; "elf32lriscv" ]
+        ~qemu:"qemu-riscv32" ~system:(Some "qemu-system-riscv32")
   | Riscv64 ->
-      gnu "riscv64-linux-gnu-"
-        ~as_flags:[ "-march=rv64imafd"; "-mabi=lp64d" ]
-        ~ld_flags:[ "-m"; "elf64lriscv" ] ~qemu:"qemu-riscv64" ~system:(Some "qemu-system-riscv64")
+      let flags =
+        match abi with
+        | Some "lp64" -> [ "-march=rv64im"; "-mabi=lp64" ]
+        | _ -> [ "-march=rv64imafd"; "-mabi=lp64d" ]
+      in
+      gnu "riscv64-linux-gnu-" ~as_flags:flags ~ld_flags:[ "-m"; "elf64lriscv" ]
+        ~qemu:"qemu-riscv64" ~system:(Some "qemu-system-riscv64")
 
-let find arch =
-  let t = spec arch in
+let find ?abi arch =
+  let t = spec ?abi arch in
   let needed = [ List.hd t.as_; List.hd t.ld; t.objdump; t.readelf ] in
   match List.find_opt (fun p -> not (have p)) needed with
   | Some p -> Error (`Missing p)

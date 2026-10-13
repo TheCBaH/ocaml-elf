@@ -4,16 +4,34 @@
 
 (library
  (name elf_gnu)
- (modules toolchain readelf)
- (libraries elf elf_test_support unix))
+ (modules
+  toolchain
+  readelf
+  objdump
+  spec
+  payload
+  payload_riscv
+  structural
+  harness)
+ (libraries elf elf.unix elf_test_support unix))
 
 (executables
- (names test_objects)
- (modules test_objects)
+ (names test_objects test_isa run_user)
+ (modules test_objects test_isa run_user)
  (libraries elf elf.unix elf_test_support elf_gnu err_trace unix))
 
 (rule
  (alias test-gnu)
- (deps test_objects.exe)
+ (deps test_objects.exe test_isa.exe run_user.exe)
  (action
-  (run ./test_objects.exe)))
+  (progn
+   (run ./test_objects.exe)
+   (run ./test_isa.exe)
+   (run ./run_user.exe))))
+
+; Placeholder so `make test-system` has an alias until the system-mode tests exist.
+
+(rule
+ (alias test-system)
+ (action
+  (echo "no system-mode tests yet\n")))

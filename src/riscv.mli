@@ -34,8 +34,10 @@ val isa_string : xlen -> base:[ `I | `E ] * (int * int) -> (string * (int * int)
 
 (** {1 Named profiles}
 
-    The ISA strings are what GNU as 2.44 emits for the matching [-march] under its default ISA
-    specification ([-misa-spec=20191213]). *)
+    The ISA strings are the ones GNU as 2.44 emits for the matching [-march] under its default ISA
+    specification, 2.2 ([-misa-spec=2.2]): [i2p0], no [zicsr], and the [zmmul]/[zaamo]/[zalrsc]
+    extensions it adds to [m] and [a]. Under [-misa-spec=20191213] the same [-march] gives
+    different versions and adds [zicsr]; build such a string with {!isa_string}. *)
 
 val rv32imafd_ilp32d : abi
 (** [-march=rv32imafd -mabi=ilp32d]: the profile matching the assembler's RV32 toolchain settings
