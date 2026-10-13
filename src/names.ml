@@ -59,6 +59,10 @@ let sht =
         (sht_preinit_array, "PREINIT_ARRAY");
         (sht_group, "GROUP");
         (sht_symtab_shndx, "SYMTAB_SHNDX");
+        (sht_gnu_hash, "GNU_HASH");
+        (sht_gnu_verdef, "VERDEF");
+        (sht_gnu_verneed, "VERNEED");
+        (sht_gnu_versym, "VERSYM");
         (sht_arm_exidx, "ARM_EXIDX");
         (sht_riscv_attributes, "RISCV_ATTRIBUTES");
       ]

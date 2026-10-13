@@ -1,7 +1,7 @@
 open Elf_test_support
 open Elf
 module T = Toolchain
-module R = Readelf
+module R = Elf_test_support.Readelf
 
 let read path = Check.ok ~pp_error:Elf_unix.pp_error path (Elf_unix.read_file path)
 

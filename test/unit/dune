@@ -12,5 +12,8 @@
   test_target
   test_exec
   test_build
-  test_fuzz)
+  test_fuzz
+  test_fixtures)
+ (deps
+  (source_tree ../fixtures))
  (libraries elf elf.unix elf_test_support err_trace unix))

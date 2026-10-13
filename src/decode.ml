@@ -315,11 +315,11 @@ let relocations t s =
 
 type note = { n_type : int64; n_name : string; n_desc : string }
 
-(* Name and descriptor are each padded to the note alignment: 4, or 8 for an
-   8-aligned section or segment (e.g. .note.gnu.property on ELF64). *)
+(* The name is padded to 4 bytes and the descriptor to the note alignment: 4, or 8 for an 8-aligned
+   section or segment (.note.gnu.property on ELF64), which is how binutils reads them too. *)
 let parse_notes region e ~align bytes =
   let len = String.length bytes in
-  let pad n = (n + align - 1) land lnot (align - 1) in
+  let pad_to a n = (n + a - 1) land lnot (a - 1) in
   let bad () = fail (`Bad_note region) in
   let rec go off acc =
     if off = len then Ok (List.rev acc)
@@ -329,8 +329,8 @@ let parse_notes region e ~align bytes =
       match (field 0, field 4) with
       | Some namesz, Some descsz ->
           let name_off = off + 12 in
-          let desc_off = name_off + pad namesz in
-          let next = desc_off + pad descsz in
+          let desc_off = name_off + pad_to 4 namesz in
+          let next = desc_off + pad_to align descsz in
           if namesz > len || descsz > len || desc_off > len || next > len then bad ()
           else
             let n_name =

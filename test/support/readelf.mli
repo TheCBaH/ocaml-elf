@@ -63,3 +63,7 @@ val segments : string -> segment list
 val attributes : string -> (string * string) list
 (** [readelf -A]: the [(tag name, value)] lines of the first File Attributes block; string values
     keep their quotes. *)
+
+val notes : string -> (string * (string * int64) list) list
+(** [readelf -n]: for each "Displaying notes found in" block, the section or segment name and the
+    [(owner, descriptor size)] of each note. *)

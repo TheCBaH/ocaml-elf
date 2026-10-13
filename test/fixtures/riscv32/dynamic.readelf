@@ -1,0 +1,177 @@
+ELF Header:
+  Magic:   7f 45 4c 46 01 01 01 00 00 00 00 00 00 00 00 00 
+  Class:                             ELF32
+  Data:                              2's complement, little endian
+  Version:                           1 (current)
+  OS/ABI:                            UNIX - System V
+  ABI Version:                       0
+  Type:                              EXEC (Executable file)
+  Machine:                           RISC-V
+  Version:                           0x1
+  Entry point address:               0x102c0
+  Start of program headers:          52 (bytes into file)
+  Start of section headers:          5236 (bytes into file)
+  Flags:                             0x4, double-float ABI
+  Size of this header:               52 (bytes)
+  Size of program headers:           32 (bytes)
+  Number of program headers:         10
+  Size of section headers:           40 (bytes)
+  Number of section headers:         22
+  Section header string table index: 21
+
+Section Headers:
+  [Nr] Name              Type            Addr     Off    Size   ES Flg Lk Inf Al
+  [ 0]                   NULL            00000000 000000 000000 00      0   0  0
+  [ 1] .interp           PROGBITS        00010174 000174 00000d 00   A  0   0  1
+  [ 2] .note.gnu.build-id NOTE            00010184 000184 000024 00   A  0   0  4
+  [ 3] .hash             HASH            000101a8 0001a8 000024 04   A  5   0  4
+  [ 4] .gnu.hash         GNU_HASH        000101cc 0001cc 00002c 04   A  5   0  4
+  [ 5] .dynsym           DYNSYM          000101f8 0001f8 000040 10   A  6   1  4
+  [ 6] .dynstr           STRTAB          00010238 000238 000034 00   A  0   0  1
+  [ 7] .rela.dyn         RELA            0001026c 00026c 00000c 0c   A  5   0  4
+  [ 8] .rela.plt         RELA            00010278 000278 00000c 0c  AI  5  15  4
+  [ 9] .plt              PROGBITS        00010290 000290 000030 10  AX  0   0 16
+  [10] .text             PROGBITS        000102c0 0002c0 000020 00  AX  0   0  4
+  [11] .eh_frame_hdr     PROGBITS        000102e0 0002e0 000014 00   A  0   0  4
+  [12] .eh_frame         PROGBITS        000102f4 0002f4 00002c 00   A  0   0  4
+  [13] .dynamic          DYNAMIC         00011f44 000f44 0000b0 08  WA  6   0  4
+  [14] .got              PROGBITS        00011ff4 000ff4 000004 04  WA  0   0  4
+  [15] .got.plt          PROGBITS        00011ff8 000ff8 00000c 04  WA  0   0  4
+  [16] .bss              NOBITS          00012004 001004 000004 00  WA  0   0  4
+  [17] .comment          PROGBITS        00000000 001004 000022 01  MS  0   0  1
+  [18] .riscv.attributes RISCV_ATTRIBUTES 00000000 001026 000055 00      0   0  1
+  [19] .symtab           SYMTAB          00000000 00107c 000240 10     20  26  4
+  [20] .strtab           STRTAB          00000000 0012bc 0000fe 00      0   0  1
+  [21] .shstrtab         STRTAB          00000000 0013ba 0000b9 00      0   0  1
+Key to Flags:
+  W (write), A (alloc), X (execute), M (merge), S (strings), I (info),
+  L (link order), O (extra OS processing required), G (group), T (TLS),
+  C (compressed), x (unknown), o (OS specific), E (exclude),
+  D (mbind), p (processor specific)
+
+There are no section groups in this file.
+
+Program Headers:
+  Type           Offset   VirtAddr   PhysAddr   FileSiz MemSiz  Flg Align
+  PHDR           0x000034 0x00010034 0x00010034 0x00140 0x00140 R   0x4
+  INTERP         0x000174 0x00010174 0x00010174 0x0000d 0x0000d R   0x1
+      [Requesting program interpreter: /lib/ld.so.1]
+  RISCV_ATTRIBUT 0x001026 0x00000000 0x00000000 0x00055 0x00000 R   0x1
+  LOAD           0x000000 0x00010000 0x00010000 0x00320 0x00320 R E 0x1000
+  LOAD           0x000f44 0x00011f44 0x00011f44 0x000c0 0x000c4 RW  0x1000
+  DYNAMIC        0x000f44 0x00011f44 0x00011f44 0x000b0 0x000b0 RW  0x4
+  NOTE           0x000184 0x00010184 0x00010184 0x00024 0x00024 R   0x4
+  GNU_EH_FRAME   0x0002e0 0x000102e0 0x000102e0 0x00014 0x00014 R   0x4
+  GNU_STACK      0x000000 0x00000000 0x00000000 0x00000 0x00000 RW  0x10
+  GNU_RELRO      0x000f44 0x00011f44 0x00011f44 0x000bc 0x000bc R   0x1
+
+ Section to Segment mapping:
+  Segment Sections...
+   00     
+   01     .interp 
+   02     .riscv.attributes 
+   03     .interp .note.gnu.build-id .hash .gnu.hash .dynsym .dynstr .rela.dyn .rela.plt .plt .text .eh_frame_hdr .eh_frame 
+   04     .dynamic .got .got.plt .bss 
+   05     .dynamic 
+   06     .note.gnu.build-id 
+   07     .eh_frame_hdr 
+   08     
+   09     .dynamic .got 
+
+Dynamic section at offset 0xf44 contains 17 entries:
+  Tag        Type                         Name/Value
+ 0x00000001 (NEEDED)                     Shared library: [lib.so]
+ 0x0000000f (RPATH)                      Library rpath: [$ORIGIN]
+ 0x00000004 (HASH)                       0x101a8
+ 0x6ffffef5 (GNU_HASH)                   0x101cc
+ 0x00000005 (STRTAB)                     0x10238
+ 0x00000006 (SYMTAB)                     0x101f8
+ 0x0000000a (STRSZ)                      52 (bytes)
+ 0x0000000b (SYMENT)                     16 (bytes)
+ 0x00000015 (DEBUG)                      0x0
+ 0x00000003 (PLTGOT)                     0x11ff8
+ 0x00000002 (PLTRELSZ)                   12 (bytes)
+ 0x00000014 (PLTREL)                     RELA
+ 0x00000017 (JMPREL)                     0x10278
+ 0x00000007 (RELA)                       0x1026c
+ 0x00000008 (RELASZ)                     24 (bytes)
+ 0x00000009 (RELAENT)                    12 (bytes)
+ 0x00000000 (NULL)                       0x0
+
+Relocation section '.rela.dyn' at offset 0x26c contains 1 entry:
+ Offset     Info    Type                Sym. Value  Symbol's Name + Addend
+00012004  00000204 R_RISCV_COPY           00012004   lib_counter + 0
+
+Relocation section '.rela.plt' at offset 0x278 contains 1 entry:
+ Offset     Info    Type                Sym. Value  Symbol's Name + Addend
+00012000  00000305 R_RISCV_JUMP_SLOT      000102b0   libfn + 0
+
+The decoding of unwind sections for machine type RISC-V is not currently supported.
+
+Symbol table '.dynsym' contains 4 entries:
+   Num:    Value  Size Type    Bind   Vis      Ndx Name
+     0: 00000000     0 NOTYPE  LOCAL  DEFAULT  UND 
+     1: 00012804     0 NOTYPE  GLOBAL DEFAULT  ABS __global_pointer$
+     2: 00012004     4 OBJECT  GLOBAL DEFAULT   16 lib_counter
+     3: 000102b0     0 FUNC    GLOBAL DEFAULT  UND libfn
+
+Symbol table '.symtab' contains 36 entries:
+   Num:    Value  Size Type    Bind   Vis      Ndx Name
+     0: 00000000     0 NOTYPE  LOCAL  DEFAULT  UND 
+     1: 00010174     0 SECTION LOCAL  DEFAULT    1 .interp
+     2: 00010184     0 SECTION LOCAL  DEFAULT    2 .note.gnu.build-id
+     3: 000101a8     0 SECTION LOCAL  DEFAULT    3 .hash
+     4: 000101cc     0 SECTION LOCAL  DEFAULT    4 .gnu.hash
+     5: 000101f8     0 SECTION LOCAL  DEFAULT    5 .dynsym
+     6: 00010238     0 SECTION LOCAL  DEFAULT    6 .dynstr
+     7: 0001026c     0 SECTION LOCAL  DEFAULT    7 .rela.dyn
+     8: 00010278     0 SECTION LOCAL  DEFAULT    8 .rela.plt
+     9: 00010290     0 SECTION LOCAL  DEFAULT    9 .plt
+    10: 000102c0     0 SECTION LOCAL  DEFAULT   10 .text
+    11: 000102e0     0 SECTION LOCAL  DEFAULT   11 .eh_frame_hdr
+    12: 000102f4     0 SECTION LOCAL  DEFAULT   12 .eh_frame
+    13: 00011f44     0 SECTION LOCAL  DEFAULT   13 .dynamic
+    14: 00011ff4     0 SECTION LOCAL  DEFAULT   14 .got
+    15: 00011ff8     0 SECTION LOCAL  DEFAULT   15 .got.plt
+    16: 00012004     0 SECTION LOCAL  DEFAULT   16 .bss
+    17: 00000000     0 SECTION LOCAL  DEFAULT   17 .comment
+    18: 00000000     0 SECTION LOCAL  DEFAULT   18 .riscv.attributes
+    19: 00000000     0 FILE    LOCAL  DEFAULT  ABS dyn.c
+    20: 000102c0     0 NOTYPE  LOCAL  DEFAULT   10 $xrv32i2p1_m2p0_a2p1_f2p2_d2p2_zicsr2p0_zmmul1p0_zaamo1p0_zalrsc1p0
+    21: 00000000     0 FILE    LOCAL  DEFAULT  ABS 
+    22: 00011f44     0 OBJECT  LOCAL  DEFAULT   13 _DYNAMIC
+    23: 00010290     0 OBJECT  LOCAL  DEFAULT    9 _PROCEDURE_LINKAGE_TABLE_
+    24: 000102e0     0 NOTYPE  LOCAL  DEFAULT   11 __GNU_EH_FRAME_HDR
+    25: 00011ff4     0 OBJECT  LOCAL  DEFAULT   14 _GLOBAL_OFFSET_TABLE_
+    26: 00012804     0 NOTYPE  GLOBAL DEFAULT  ABS __global_pointer$
+    27: 00012004     4 OBJECT  GLOBAL DEFAULT   16 lib_counter
+    28: 00012004     0 NOTYPE  GLOBAL DEFAULT   15 __SDATA_BEGIN__
+    29: 000102c0    32 FUNC    GLOBAL DEFAULT   10 _start
+    30: 00012008     0 NOTYPE  GLOBAL DEFAULT   16 __BSS_END__
+    31: 00012004     0 NOTYPE  GLOBAL DEFAULT   16 __bss_start
+    32: 00012004     0 NOTYPE  GLOBAL DEFAULT   15 __DATA_BEGIN__
+    33: 00012004     0 NOTYPE  GLOBAL DEFAULT   15 _edata
+    34: 00012008     0 NOTYPE  GLOBAL DEFAULT   16 _end
+    35: 000102b0     0 FUNC    GLOBAL DEFAULT  UND libfn
+
+Histogram for bucket list length (total of 3 buckets):
+ Length  Number     % of total  Coverage
+      0  0          (  0.0%)
+      1  3          (100.0%)    100.0%
+
+Histogram for `.gnu.hash' bucket list length (total of 3 buckets):
+ Length  Number     % of total  Coverage
+      0  2          ( 66.7%)
+      1  0          (  0.0%)      0.0%
+      2  0          (  0.0%)      0.0%
+      3  1          ( 33.3%)    100.0%
+
+No version information found in this file.
+
+Displaying notes found in: .note.gnu.build-id
+  Owner                Data size 	Description
+  GNU                  0x00000014	NT_GNU_BUILD_ID (unique build ID bitstring)	    Build ID: 8c817a7a6a0852eb7ba1a0de56a6ff147aad0f23
+Attribute Section: riscv
+File Attributes
+  Tag_RISCV_stack_align: 16-bytes
+  Tag_RISCV_arch: "rv32i2p1_m2p0_a2p1_f2p2_d2p2_zicsr2p0_zmmul1p0_zaamo1p0_zalrsc1p0"

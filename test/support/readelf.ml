@@ -71,11 +71,50 @@ let header out =
       | _ -> None)
     (lines out)
 
+(* A section whose name is too long for its column has the remaining fields on the next line. *)
+let join_wrapped_rows ls =
+  let is_bare_row l =
+    let l = strip l in
+    starts_with ~prefix:"[" l
+    &&
+    match String.index_opt l ']' with
+    | Some i ->
+        int_of_string_opt (strip (String.sub l 1 (i - 1))) <> None
+        && List.length (tokens (String.sub l (i + 1) (String.length l - i - 1))) = 1
+    | None -> false
+  in
+  let rec go = function
+    | a :: b :: rest when is_bare_row a -> go ((a ^ " " ^ strip b) :: rest)
+    | x :: rest -> x :: go rest
+    | [] -> []
+  in
+  go ls
+
+(* The lines of the "Section Headers:" table (other parts of -a list sections too, e.g. group
+   members). *)
+let section_block ls =
+  let rec after = function
+    | [] -> []
+    | l :: rest -> if starts_with ~prefix:"Section Headers:" l then rest else after rest
+  in
+  let rec upto = function
+    | [] -> []
+    | l :: rest -> if starts_with ~prefix:"Key to Flags:" l then [] else l :: upto rest
+  in
+  upto (after ls)
+
 let sections out =
   List.filter_map
     (fun l ->
       let l = strip l in
-      if starts_with ~prefix:"[" l && not (starts_with ~prefix:"[Nr]" l) then
+      let is_row =
+        starts_with ~prefix:"[" l
+        &&
+        match String.index_opt l ']' with
+        | Some i -> int_of_string_opt (strip (String.sub l 1 (i - 1))) <> None
+        | None -> false
+      in
+      if is_row then
         match String.index_opt l ']' with
         | None -> None
         | Some i -> (
@@ -112,7 +151,7 @@ let sections out =
                   }
             | _ -> failwith ("cannot parse section line: " ^ l))
       else None)
-    (lines out)
+    (join_wrapped_rows (section_block (lines out)))
 
 (* Blocks introduced by a title line "<prefix> '<name>' ...": returns (name, following lines). *)
 let blocks ~prefix out =
@@ -134,14 +173,33 @@ let blocks ~prefix out =
   in
   go [] None (lines out)
 
+(* The first [n] whitespace-separated tokens of [s], and what follows the separator after the nth
+   verbatim: a symbol name may end in a space (RISC-V's ".L0 "), which tokenizing would lose. *)
+let split_n n s =
+  let len = String.length s in
+  let rec skip_blank i =
+    if i < len && (s.[i] = ' ' || s.[i] = '\t') then skip_blank (i + 1) else i
+  in
+  let rec token_end i = if i < len && s.[i] <> ' ' && s.[i] <> '\t' then token_end (i + 1) else i in
+  let rec go k i acc =
+    if k = 0 then (List.rev acc, if i < len then String.sub s (i + 1) (len - i - 1) else "")
+    else
+      let start = skip_blank i in
+      if start >= len then (List.rev acc, "")
+      else
+        let stop = token_end start in
+        go (k - 1) stop (String.sub s start (stop - start) :: acc)
+  in
+  go n 0 []
+
 let symbols out =
   List.map
     (fun (table, ls) ->
       let syms =
         List.filter_map
           (fun l ->
-            match tokens l with
-            | num :: value :: size :: typ :: bind :: vis :: ndx :: rest
+            match split_n 7 l with
+            | [ num; value; size; typ; bind; vis; ndx ], name
               when String.length num > 1
                    && num.[String.length num - 1] = ':'
                    && num.[0] >= '0'
@@ -155,7 +213,7 @@ let symbols out =
                     bind;
                     vis;
                     ndx;
-                    name = (match rest with n :: _ -> n | [] -> "");
+                    name;
                   }
             | _ -> None)
           ls
@@ -163,38 +221,66 @@ let symbols out =
       (table, syms))
     (blocks ~prefix:"Symbol table '" out)
 
+let is_hex_digits v =
+  v <> "" && String.for_all (function '0' .. '9' | 'a' .. 'f' -> true | _ -> false) v
+
+(* The name and optional addend of "name + addend" / "name - addend", the name kept verbatim. *)
+let name_and_addend r =
+  let len = String.length r in
+  let rec last_op i =
+    if i < 0 then None
+    else if
+      i + 3 <= len
+      && (String.sub r i 3 = " + " || String.sub r i 3 = " - ")
+      && is_hex_digits (String.trim (String.sub r (i + 3) (len - i - 3)))
+    then Some i
+    else last_op (i - 1)
+  in
+  match last_op (len - 3) with
+  | Some i ->
+      let a = hex (String.trim (String.sub r (i + 3) (len - i - 3))) in
+      (String.sub r 0 i, Some (if r.[i + 1] = '-' then Int64.neg a else a))
+  | None -> (r, None)
+
 let relocs out =
   List.map
     (fun (sect, ls) ->
       let rs =
         List.filter_map
           (fun l ->
-            match tokens l with
-            | offset :: info :: rtype :: rest
-              when String.length offset >= 8
-                   && String.for_all
-                        (function '0' .. '9' | 'a' .. 'f' -> true | _ -> false)
-                        offset ->
-                (* [sym value] [name [+|- addend]] *)
-                let rest =
-                  match rest with
-                  | v :: r
-                    when String.for_all (function '0' .. '9' | 'a' .. 'f' -> true | _ -> false) v
-                         && String.length v >= 8 ->
-                      r
-                  | r -> r
+            match split_n 3 l with
+            | [ offset; info; rtype ], rest when String.length offset >= 8 && is_hex_digits offset
+              ->
+                let info_value = hex info in
+                (* With no symbol (r_sym = 0) readelf omits the symbol columns and prints only the
+                   addend, in hex and unsigned. *)
+                let sym =
+                  if String.length info >= 16 then Int64.shift_right_logical info_value 32
+                  else Int64.shift_right_logical info_value 8
                 in
+                let rest = String.trim rest in
                 let sym_name, addend =
-                  match rest with
-                  | [] -> ("", None)
-                  | [ n ] -> (n, None)
-                  | [ n; "+"; a ] -> (n, Some (hex a))
-                  | [ n; "-"; a ] -> (n, Some (Int64.neg (hex a)))
-                  | [ "+"; a ] -> ("", Some (hex a))
-                  | [ "-"; a ] -> ("", Some (Int64.neg (hex a)))
-                  | _ -> failwith ("cannot parse relocation line: " ^ l)
+                  if rest = "" then ("", None)
+                  else if sym = 0L then ("", if is_hex_digits rest then Some (hex rest) else None)
+                  else
+                    (* drop the symbol's value column *)
+                    let value, after = split_n 1 rest in
+                    let after =
+                      match value with
+                      | [ v ] when is_hex_digits v && String.length v >= 8 -> after
+                      | _ -> rest
+                    in
+                    let after =
+                      (* one separator, not trailing characters of the name *)
+                      let i = ref 0 in
+                      while !i < String.length after && after.[!i] = ' ' do
+                        incr i
+                      done;
+                      String.sub after !i (String.length after - !i)
+                    in
+                    name_and_addend after
                 in
-                Some { offset = hex offset; info = hex info; rtype; sym_name; addend }
+                Some { offset = hex offset; info = info_value; rtype; sym_name; addend }
             | _ -> None)
           ls
       in
@@ -243,3 +329,21 @@ let attributes out =
           Some (strip (String.sub l 0 i), strip (String.sub l (i + 1) (String.length l - i - 1)))
       | None -> None)
     (take (after (lines out)))
+
+let notes out =
+  let rec go acc cur = function
+    | [] -> List.rev (match cur with Some c -> c :: acc | None -> acc)
+    | l :: rest -> (
+        let prefix = "Displaying notes found in: " in
+        if starts_with ~prefix l then
+          let name = String.sub l (String.length prefix) (String.length l - String.length prefix) in
+          let acc = match cur with Some c -> c :: acc | None -> acc in
+          go acc (Some (strip name, [])) rest
+        else
+          match (cur, tokens l) with
+          | Some (n, ns), owner :: size :: _ when starts_with ~prefix:"0x" size && owner <> "Owner"
+            ->
+              go acc (Some (n, (owner, hex size) :: ns)) rest
+          | _ -> go acc cur rest)
+  in
+  List.map (fun (n, ns) -> (n, List.rev ns)) (go [] None (lines out))

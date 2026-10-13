@@ -233,9 +233,9 @@ Validation performed, each failure with its own constructor:
   number of entries.
 - `SHN_XINDEX` symbols are resolved through the `SHT_SYMTAB_SHNDX` section
   linked to their symbol table.
-- Notes: the alignment is 4, or 8 when the section/segment alignment is 8
-  (e.g. `.note.gnu.property`), and every name/descriptor length is
-  bounds-checked.
+- Notes: the name is padded to 4 bytes and the descriptor to 4, or to 8 when the
+  section/segment alignment is 8 (`.note.gnu.property` on ELF64), as binutils
+  reads them; every name/descriptor length is bounds-checked.
 - Section and segment *contents* are validated lazily by the accessors. A file
   with one bad section still decodes, and only that section's accessor fails.
 

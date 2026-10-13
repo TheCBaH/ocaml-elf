@@ -105,6 +105,32 @@ let () =
                 (ok "section" (Decode.notes d (`Section (sec d ".note.test"))));
               Check.equal ~pp:pp_any (label ^ " segment") expected
                 (ok "segment" (Decode.notes d (`Segment 1)))));
+      Check.case "8-aligned notes pad the descriptor to 8, the name to 4" (fun () ->
+          (* Two .note.gnu.property-style notes: header, "GNU\000" (4, no padding), a 12-byte
+             descriptor padded to 16, then a 16-byte one. *)
+          List.iter
+            (fun (label, cls, endian) ->
+              let w v =
+                let b = Bytes.create 4 in
+                Codec.set_u32 endian b 0 v;
+                Bytes.to_string b
+              in
+              let note ty desc pad =
+                w 4L
+                ^ w (Int64.of_int (String.length desc))
+                ^ w ty ^ "GNU\000" ^ desc ^ String.make pad '\000'
+              in
+              let data = note 5L (String.make 12 'a') 4 ^ note 5L (String.make 16 'b') 0 in
+              let bytes =
+                Fixture.build cls endian
+                  [ Fixture.sect ".note.gnu.property" Const.sht_note data ~align:8L ]
+              in
+              let d = dec bytes in
+              let notes = ok "notes" (Decode.notes d (`Section (sec d ".note.gnu.property"))) in
+              Check.equal ~pp:pp_int (label ^ " count") 2 (List.length notes);
+              Check.equal ~pp:Format.pp_print_string (label ^ " second descriptor")
+                (String.make 16 'b') (List.nth notes 1).n_desc)
+            variants);
       Check.case "extended numbering" (fun () ->
           let bytes = Fixture.many_sections 0xff0e in
           let h = Fixture.header bytes in

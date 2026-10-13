@@ -6,7 +6,6 @@
  (name elf_gnu)
  (modules
   toolchain
-  readelf
   objdump
   spec
   payload

@@ -1,0 +1,149 @@
+ELF Header:
+  Magic:   7f 45 4c 46 01 01 01 00 00 00 00 00 00 00 00 00 
+  Class:                             ELF32
+  Data:                              2's complement, little endian
+  Version:                           1 (current)
+  OS/ABI:                            UNIX - System V
+  ABI Version:                       0
+  Type:                              DYN (Shared object file)
+  Machine:                           ARM
+  Version:                           0x1
+  Entry point address:               0x0
+  Start of program headers:          52 (bytes into file)
+  Start of section headers:          4796 (bytes into file)
+  Flags:                             0x5000400, Version5 EABI, hard-float ABI
+  Size of this header:               52 (bytes)
+  Size of program headers:           32 (bytes)
+  Number of program headers:         6
+  Size of section headers:           40 (bytes)
+  Number of section headers:         16
+  Section header string table index: 15
+
+Section Headers:
+  [Nr] Name              Type            Addr     Off    Size   ES Flg Lk Inf Al
+  [ 0]                   NULL            00000000 000000 000000 00      0   0  0
+  [ 1] .note.gnu.build-id NOTE            000000f4 0000f4 000024 00   A  0   0  4
+  [ 2] .gnu.hash         GNU_HASH        00000118 000118 00002c 04   A  3   0  4
+  [ 3] .dynsym           DYNSYM          00000144 000144 000060 10   A  4   3  4
+  [ 4] .dynstr           STRTAB          000001a4 0001a4 000023 00   A  0   0  1
+  [ 5] .rel.dyn          REL             000001c8 0001c8 000008 08   A  3   0  4
+  [ 6] .text             PROGBITS        000001d0 0001d0 000024 00  AX  0   0  4
+  [ 7] .rodata           PROGBITS        000001f4 0001f4 000007 00   A  0   0  4
+  [ 8] .dynamic          DYNAMIC         00001f88 000f88 000078 08  WA  4   0  4
+  [ 9] .got              PROGBITS        00002000 001000 000010 04  WA  0   0  4
+  [10] .data             PROGBITS        00002010 001010 000004 00  WA  0   0  4
+  [11] .comment          PROGBITS        00000000 001014 00001f 01  MS  0   0  1
+  [12] .ARM.attributes   ARM_ATTRIBUTES  00000000 001033 000033 00      0   0  1
+  [13] .symtab           SYMTAB          00000000 001068 000180 10     14  21  4
+  [14] .strtab           STRTAB          00000000 0011e8 000047 00      0   0  1
+  [15] .shstrtab         STRTAB          00000000 00122f 00008c 00      0   0  1
+Key to Flags:
+  W (write), A (alloc), X (execute), M (merge), S (strings), I (info),
+  L (link order), O (extra OS processing required), G (group), T (TLS),
+  C (compressed), x (unknown), o (OS specific), E (exclude),
+  D (mbind), y (purecode), p (processor specific)
+
+There are no section groups in this file.
+
+Program Headers:
+  Type           Offset   VirtAddr   PhysAddr   FileSiz MemSiz  Flg Align
+  LOAD           0x000000 0x00000000 0x00000000 0x001fb 0x001fb R E 0x1000
+  LOAD           0x000f88 0x00001f88 0x00001f88 0x0008c 0x0008c RW  0x1000
+  DYNAMIC        0x000f88 0x00001f88 0x00001f88 0x00078 0x00078 RW  0x4
+  NOTE           0x0000f4 0x000000f4 0x000000f4 0x00024 0x00024 R   0x4
+  GNU_STACK      0x000000 0x00000000 0x00000000 0x00000 0x00000 RW  0x10
+  GNU_RELRO      0x000f88 0x00001f88 0x00001f88 0x00078 0x00078 R   0x1
+
+ Section to Segment mapping:
+  Segment Sections...
+   00     .note.gnu.build-id .gnu.hash .dynsym .dynstr .rel.dyn .text .rodata 
+   01     .dynamic .got .data 
+   02     .dynamic 
+   03     .note.gnu.build-id 
+   04     
+   05     .dynamic 
+
+Dynamic section at offset 0xf88 contains 10 entries:
+  Tag        Type                         Name/Value
+ 0x0000000e (SONAME)                     Library soname: [lib.so]
+ 0x6ffffef5 (GNU_HASH)                   0x118
+ 0x00000005 (STRTAB)                     0x1a4
+ 0x00000006 (SYMTAB)                     0x144
+ 0x0000000a (STRSZ)                      35 (bytes)
+ 0x0000000b (SYMENT)                     16 (bytes)
+ 0x00000011 (REL)                        0x1c8
+ 0x00000012 (RELSZ)                      8 (bytes)
+ 0x00000013 (RELENT)                     8 (bytes)
+ 0x00000000 (NULL)                       0x0
+
+Relocation section '.rel.dyn' at offset 0x1c8 contains 1 entry:
+ Offset     Info    Type                Sym. Value  Symbol's Name
+0000200c  00000315 R_ARM_GLOB_DAT         00002010   lib_counter
+
+There are no unwind sections in this file.
+
+Symbol table '.dynsym' contains 6 entries:
+   Num:    Value  Size Type    Bind   Vis      Ndx Name
+     0: 00000000     0 NOTYPE  LOCAL  DEFAULT  UND 
+     1: 000001d0     0 SECTION LOCAL  DEFAULT    6 .text
+     2: 00002010     0 SECTION LOCAL  DEFAULT   10 .data
+     3: 00002010     4 OBJECT  GLOBAL DEFAULT   10 lib_counter
+     4: 000001d0    36 FUNC    GLOBAL DEFAULT    6 libfn
+     5: 000001f4     7 OBJECT  GLOBAL DEFAULT    7 lib_name
+
+Symbol table '.symtab' contains 24 entries:
+   Num:    Value  Size Type    Bind   Vis      Ndx Name
+     0: 00000000     0 NOTYPE  LOCAL  DEFAULT  UND 
+     1: 000000f4     0 SECTION LOCAL  DEFAULT    1 .note.gnu.build-id
+     2: 00000118     0 SECTION LOCAL  DEFAULT    2 .gnu.hash
+     3: 00000144     0 SECTION LOCAL  DEFAULT    3 .dynsym
+     4: 000001a4     0 SECTION LOCAL  DEFAULT    4 .dynstr
+     5: 000001c8     0 SECTION LOCAL  DEFAULT    5 .rel.dyn
+     6: 000001d0     0 SECTION LOCAL  DEFAULT    6 .text
+     7: 000001f4     0 SECTION LOCAL  DEFAULT    7 .rodata
+     8: 00001f88     0 SECTION LOCAL  DEFAULT    8 .dynamic
+     9: 00002000     0 SECTION LOCAL  DEFAULT    9 .got
+    10: 00002010     0 SECTION LOCAL  DEFAULT   10 .data
+    11: 00000000     0 SECTION LOCAL  DEFAULT   11 .comment
+    12: 00000000     0 SECTION LOCAL  DEFAULT   12 .ARM.attributes
+    13: 00000000     0 FILE    LOCAL  DEFAULT  ABS lib.c
+    14: 000001d0     0 NOTYPE  LOCAL  DEFAULT    6 $a
+    15: 000001ec     0 NOTYPE  LOCAL  DEFAULT    6 $d
+    16: 000001f4     0 NOTYPE  LOCAL  DEFAULT    7 $d
+    17: 00002010     0 NOTYPE  LOCAL  DEFAULT   10 $d
+    18: 00000000     0 FILE    LOCAL  DEFAULT  ABS 
+    19: 00001f88     0 OBJECT  LOCAL  DEFAULT  ABS _DYNAMIC
+    20: 00002000     0 OBJECT  LOCAL  DEFAULT  ABS _GLOBAL_OFFSET_TABLE_
+    21: 00002010     4 OBJECT  GLOBAL DEFAULT   10 lib_counter
+    22: 000001f4     7 OBJECT  GLOBAL DEFAULT    7 lib_name
+    23: 000001d0    36 FUNC    GLOBAL DEFAULT    6 libfn
+
+Histogram for `.gnu.hash' bucket list length (total of 3 buckets):
+ Length  Number     % of total  Coverage
+      0  1          ( 33.3%)
+      1  1          ( 33.3%)     33.3%
+      2  1          ( 33.3%)    100.0%
+
+No version information found in this file.
+
+Displaying notes found in: .note.gnu.build-id
+  Owner                Data size 	Description
+  GNU                  0x00000014	NT_GNU_BUILD_ID (unique build ID bitstring)	    Build ID: a0ae1524c04fd69837180f32a33f330eb47cef58
+Attribute Section: aeabi
+File Attributes
+  Tag_CPU_name: "7-A"
+  Tag_CPU_arch: v7
+  Tag_CPU_arch_profile: Application
+  Tag_ARM_ISA_use: Yes
+  Tag_THUMB_ISA_use: Thumb-2
+  Tag_FP_arch: VFPv3-D16
+  Tag_ABI_PCS_wchar_t: 4
+  Tag_ABI_FP_denormal: Needed
+  Tag_ABI_FP_exceptions: Needed
+  Tag_ABI_FP_number_model: IEEE 754
+  Tag_ABI_align_needed: 8-byte
+  Tag_ABI_align_preserved: 8-byte, except leaf SP
+  Tag_ABI_enum_size: int
+  Tag_ABI_VFP_args: VFP registers
+  Tag_ABI_optimization_goals: Prefer Speed
+  Tag_CPU_unaligned_access: v6

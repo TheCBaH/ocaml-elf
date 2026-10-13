@@ -1,6 +1,6 @@
 ; js_of_ocaml build of the unit suites, run under node by @test-js. The sources
 ; are the same files `make test` runs natively. Keep `names` in step with
-; ../unit/dune; test_unix needs Unix and is native only.
+; ../unit/dune; test_unix and test_fixtures read files and are native only.
 
 (copy_files ../unit/test_*.ml)
 
@@ -18,7 +18,7 @@
   test_exec
   test_build
   test_fuzz)
- (modules :standard \ test_unix)
+ (modules :standard \ test_unix test_fixtures)
  (modes js)
  (flags
   (:standard -open Elf))

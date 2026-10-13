@@ -303,7 +303,7 @@ elf/
   - `symbols` resolves `sh_link` (must be `SHT_STRTAB`) and the
     `SHT_SYMTAB_SHNDX` whose `sh_link` is this symtab.
   - `relocations` checks that `sh_link` is in range.
-  - `notes` pads to 4, or to 8 when the alignment is 8.
+  - `notes` pads the name to 4 and the descriptor to 4, or to 8 when the alignment is 8.
 - **Tests:** each accessor on a valid fixture, plus every error it can raise:
   - `` `Wrong_section_type ``: calling `symbols` on `.strtab`;
   - `` `Bad_entry_size ``: `sh_entsize` 20 on an ELF32 symtab;
