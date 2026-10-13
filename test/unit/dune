@@ -7,5 +7,6 @@
   test_decode
   test_strtab
   test_attributes
-  test_malformed)
- (libraries elf elf_test_support err_trace))
+  test_malformed
+  test_unix)
+ (libraries elf elf.unix elf_test_support err_trace unix))

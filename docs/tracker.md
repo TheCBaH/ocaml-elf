@@ -55,8 +55,8 @@ settled. Whether to keep it as the starting point or delete it is open (Q7).
 | M1.6 | `Decode` accessors | done | added `Bad_segment_index`; `attributes` accessor; Decode.error includes Attributes.error |
 | M1.7 | `Strtab` | done | `strtab.ml{,i}`, `test_strtab` |
 | M1.8 | `Attributes` | done | `attributes.ml{,i}`; extra encode errors `Bad_value_kind`, `Unknown_vendor`, `Bad_tag`, `Bad_index`; GAS 2.44 golden |
-| M1.9 | `elf.unix` | todo | `unix/` directory exists and is empty |
-| M1.10 | `elf-inspect` | todo | |
+| M1.9 | `elf.unix` | done | `unix/elf_unix.ml{,i}`, `test_unix` (native only) |
+| M1.10 | `elf-inspect` | done | `bin/elf_inspect.ml`; `--trace` is opt-in so golden output does not pin library line numbers; cram `inspect.t`, `errors.t` |
 | M1.11 | Malformed corpus | done | `test/unit/test_malformed.ml` (fuzz loop is M5.4) |
 | M1.12 | GAS objects | todo | |
 
@@ -153,4 +153,4 @@ Q1–Q6 are design §12. Q7 and Q8 are tracker-only.
 - 2026-10-13: M0.1–M0.3, M0.8 and M1.1 done; draft M1 code kept (Q7).
 - 2026-10-13: M1.2–M1.4 done.
 - 2026-10-13: M1.5–M1.8 and M1.11 done.
-- 2026-10-13: M1.5–M1.8 and M1.11 done.
+- 2026-10-13: M1.9 and M1.10 done.

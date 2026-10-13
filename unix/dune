@@ -1,0 +1,4 @@
+(library
+ (name elf_unix)
+ (public_name elf.unix)
+ (libraries elf unix err_trace))
