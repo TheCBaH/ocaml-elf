@@ -33,9 +33,10 @@ let build ?(e_type = 2) ?(machine = 243) ?(entry = 0L) ?(flags = 0L) ?(phdrs = f
       o
     end
   in
-  let name_offs = List.map (fun s -> name_off s.name) sects in
+  let sects = Array.of_list sects in
+  let name_offs = Array.map (fun s -> name_off s.name) sects in
   let shstr_name = name_off ".shstrtab" in
-  let nsect = List.length sects + 2 in
+  let nsect = Array.length sects + 2 in
   let shstrndx = nsect - 1 in
   let word = Codec.word_size cls in
   (* Section placement, in file order. *)
@@ -49,19 +50,19 @@ let build ?(e_type = 2) ?(machine = 243) ?(entry = 0L) ?(flags = 0L) ?(phdrs = f
     off := o + String.length s.data;
     o
   in
-  let sect_offs = List.map place sects in
+  let sect_offs = Array.map place sects in
   let shstr_off = !off in
   off := shstr_off + Buffer.length shstr;
   let shoff = align_to !off word in
   let total = shoff + (nsect * Codec.shdr_size cls) in
   let b = Bytes.make total '\000' in
   let offsets =
-    Array.of_list ((0L :: List.map Int64.of_int sect_offs) @ [ Int64.of_int shstr_off ])
+    Array.concat [ [| 0L |]; Array.map Int64.of_int sect_offs; [| Int64.of_int shstr_off |] ]
   in
   List.iteri
     (fun i p -> Codec.write_phdr cls endian b (Codec.ehdr_size cls + (i * Codec.phdr_size cls)) p)
     (phdrs offsets);
-  List.iter2 (fun s o -> Bytes.blit_string s.data 0 b o (String.length s.data)) sects sect_offs;
+  Array.iteri (fun i s -> Bytes.blit_string s.data 0 b sect_offs.(i) (String.length s.data)) sects;
   Bytes.blit_string (Buffer.contents shstr) 0 b shstr_off (Buffer.length shstr);
   let shdr_at i sh = Codec.write_shdr cls endian b (shoff + (i * Codec.shdr_size cls)) sh in
   let null =
@@ -87,22 +88,22 @@ let build ?(e_type = 2) ?(machine = 243) ?(entry = 0L) ?(flags = 0L) ?(phdrs = f
       sh_size = (if big_shnum then Int64.of_int nsect else 0L);
       sh_link = (if big_shstrndx then Int64.of_int shstrndx else 0L);
     };
-  List.iteri
-    (fun i (s, (no, o)) ->
+  Array.iteri
+    (fun i s ->
       shdr_at (i + 1)
         {
-          sh_name = Int64.of_int no;
+          sh_name = Int64.of_int name_offs.(i);
           sh_type = s.typ;
           sh_flags = s.flags;
           sh_addr = s.addr;
-          sh_offset = Int64.of_int o;
+          sh_offset = Int64.of_int sect_offs.(i);
           sh_size = Option.value s.size ~default:(Int64.of_int (String.length s.data));
           sh_link = Int64.of_int s.link;
           sh_info = s.info;
           sh_addralign = s.align;
           sh_entsize = s.entsize;
         })
-    (List.combine sects (List.combine name_offs sect_offs));
+    sects;
   shdr_at shstrndx
     {
       sh_name = Int64.of_int shstr_name;

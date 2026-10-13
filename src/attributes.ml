@@ -104,19 +104,26 @@ let read_value ~kind data pos limit =
       let+ s, next = read_ntbs data p limit in
       (Uleb_ntbs (v, s), next)
 
+(* The loops below match explicitly instead of binding: js_of_ocaml turns only
+   direct self-recursion into a loop, and an attribute section can be large. *)
 let rec read_attributes ~vendor data pos stop acc =
   if pos >= stop then Ok (List.rev acc)
   else
-    let* tag, p = read_int data pos stop in
-    match classify ~vendor ~tag with
-    | None -> assert false (* only called for vendors whose tags are classified *)
-    | Some kind ->
-        let* v, next = read_value ~kind data p stop in
-        read_attributes ~vendor data next stop ((tag, v) :: acc)
+    match read_int data pos stop with
+    | Error _ as e -> e
+    | Ok (tag, p) -> (
+        match classify ~vendor ~tag with
+        | None -> assert false (* only called for vendors whose tags are classified *)
+        | Some kind -> (
+            match read_value ~kind data p stop with
+            | Error _ as e -> e
+            | Ok (v, next) -> read_attributes ~vendor data next stop ((tag, v) :: acc)))
 
 let rec read_indices data pos stop acc =
-  let* i, p = read_int data pos stop in
-  if i = 0 then Ok (List.rev acc, p) else read_indices data p stop (i :: acc)
+  match read_int data pos stop with
+  | Error _ as e -> e
+  | Ok (0, p) -> Ok (List.rev acc, p)
+  | Ok (i, p) -> read_indices data p stop (i :: acc)
 
 let read_scope_group e ~vendor data pos stop =
   let* scope_tag, p = read_int data pos stop in
@@ -148,8 +155,9 @@ let read_scope_group e ~vendor data pos stop =
 let rec read_scope_groups e ~vendor data pos stop acc =
   if pos >= stop then Ok (List.rev acc)
   else
-    let* group, next = read_scope_group e ~vendor data pos stop in
-    read_scope_groups e ~vendor data next stop (group :: acc)
+    match read_scope_group e ~vendor data pos stop with
+    | Error _ as err -> err
+    | Ok (group, next) -> read_scope_groups e ~vendor data next stop (group :: acc)
 
 let read_subsection e data pos len =
   let* length = read_u32 e data pos len in
@@ -177,8 +185,9 @@ let decode e data =
     let rec go pos acc =
       if pos = len then Ok (List.rev acc)
       else
-        let* sub, next = read_subsection e data pos len in
-        go next (sub :: acc)
+        match read_subsection e data pos len with
+        | Error _ as err -> err
+        | Ok (sub, next) -> go next (sub :: acc)
     in
     go 1 []
 

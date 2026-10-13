@@ -196,14 +196,18 @@ let of_string data =
                })
       in
       let* strtab = shdr_bytes data shstrndx shdrs.(shstrndx) in
-      let+ named =
-        Err.List.map
-          (fun (index, shdr) ->
-            let+ name = cstring ~section:shstrndx strtab shdr.sh_name in
-            { index; name; shdr })
-          (List.mapi (fun i s -> (i, s)) (Array.to_list shdrs))
+      (* A self-recursive loop with explicit matches rather than a monadic one: a
+         file can have 64K sections and js_of_ocaml does not optimize the tail call
+         through a bind. *)
+      let rec name_from index acc =
+        if index = shnum then Ok (Array.of_list (List.rev acc))
+        else
+          let shdr = shdrs.(index) in
+          match cstring ~section:shstrndx strtab shdr.sh_name with
+          | Error _ as e -> e
+          | Ok name -> name_from (index + 1) ({ index; name; shdr } :: acc)
       in
-      Array.of_list named
+      name_from 0 []
   in
   Ok { data; header; phnum; shnum; shstrndx; phdrs; sections }
 

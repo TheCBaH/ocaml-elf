@@ -51,13 +51,13 @@ settled. Whether to keep it as the starting point or delete it is open (Q7).
 | M1.2 | `Types`, `Const` | done | `names.ml{,i}`; test enumerates every Const name |
 | M1.3 | `Codec` | done | `test_codec`; Codec stays private, tests compile its source via `copy_files` |
 | M1.4 | `Encode` | done | `test_encode`; message pinned in `errors.t` |
-| M1.5 | `Decode` core | done | `test_decode`, extended numbering via `Fixture.many_sections`; shstrtab type is checked |
+| M1.5 | `Decode` core | done | `test_decode`, extended numbering via `Fixture.many_sections`; shstrtab type is checked; loops avoid binds so they run under js_of_ocaml |
 | M1.6 | `Decode` accessors | done | added `Bad_segment_index`; `attributes` accessor; Decode.error includes Attributes.error |
-| M1.7 | `Strtab` | todo | |
-| M1.8 | `Attributes` | todo | |
+| M1.7 | `Strtab` | done | `strtab.ml{,i}`, `test_strtab` |
+| M1.8 | `Attributes` | done | `attributes.ml{,i}`; extra encode errors `Bad_value_kind`, `Unknown_vendor`, `Bad_tag`, `Bad_index`; GAS 2.44 golden |
 | M1.9 | `elf.unix` | todo | `unix/` directory exists and is empty |
 | M1.10 | `elf-inspect` | todo | |
-| M1.11 | Malformed corpus | todo | |
+| M1.11 | Malformed corpus | done | `test/unit/test_malformed.ml` (fuzz loop is M5.4) |
 | M1.12 | GAS objects | todo | |
 
 ### M2. RV32 static `ET_EXEC`, Linux user mode
@@ -152,4 +152,5 @@ Q1–Q6 are design §12. Q7 and Q8 are tracker-only.
   unchanged.
 - 2026-10-13: M0.1–M0.3, M0.8 and M1.1 done; draft M1 code kept (Q7).
 - 2026-10-13: M1.2–M1.4 done.
+- 2026-10-13: M1.5–M1.8 and M1.11 done.
 - 2026-10-13: M1.5–M1.8 and M1.11 done.
