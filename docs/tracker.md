@@ -110,7 +110,7 @@ All planned tasks done except M6 (deferred) and the items that need hosting or D
 | ID | Task | Status | Notes |
 | --- | --- | --- | --- |
 | M6 | `ET_REL` generation | deferred | |
-| M7.1 | Assembler adapter | done | `asm/elf_adapter/{elf_adapter.ml{,i},dune}` in the host repository: `Image.plan_of` → `Exec.place` → `Image.bind_image` → `Exec.build`; exports become `STT_NOTYPE` globals. Gated by `ASM_ELF_ADAPTER` (outside the purity audit); elf is compiled from source through the `asm/elf_adapter/elf` symlink because an installed elf resolves err_trace to the opam copy and conflicts with asm's vendored one |
+| M7.1 | Assembler adapter | done | `asm/elf_adapter/{elf_adapter.ml{,i},run_corpus.ml,dune}` in the host repository (uncommitted there): `Image.plan_of` → `Exec.place` → `Image.bind_image` → `Exec.build`; exports become `STT_NOTYPE` globals. Gated by `ASM_ELF_ADAPTER`, including its `copy_files`, so a checkout without `elf/` still builds; elf is compiled from source through the `asm/elf_adapter/elf` symlink because an installed elf resolves err_trace to the opam copy and conflicts with asm's vendored one. `asm-fmt-check`, `asm-build`, `asm-purity`, `asm-planted` and `asm-melange-optin` still pass |
 | M7.2 | Assembler-produced executables | done | `asm/elf_adapter/run_corpus.ml`, `make asm-elf-adapter-test`: all 55 corpus programs (10 cases × the targets each has, 6 architectures) assemble with a `_start` shim, build as ELF and exit with their expected-status.txt under qemu-<arch>. ARM and AArch64 shims write `svc #0` as a word: the assembler has no SVC encoder |
 
 ## Open questions
@@ -164,3 +164,4 @@ Q1–Q6 are design §12. Q7 and Q8 are tracker-only.
 - 2026-10-13: M5.4 done: fuzz loop (100000 mutations per base clean).
 - 2026-10-13: M5.5 done (js_of_ocaml; Melange not available from err_trace).
 - 2026-10-13: M5.1–M5.3 done: 36 GNU-produced fixtures agree with readelf; the note-padding bug and missing GNU section type names were found by them.
+- 2026-10-13: M7 done. Everything in plan.md is done except M6 (deferred by the plan); M0.5–M0.7 are written but not run (no Docker or GitHub here). Host-repository files changed and left uncommitted there: Makefile, CLAUDE.md, .devcontainer/Dockerfile, .github/workflows/elf.yml, asm/elf_adapter/.
