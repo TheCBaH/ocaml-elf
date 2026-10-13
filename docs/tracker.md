@@ -103,7 +103,7 @@ M5 (parser breadth: fixtures, fuzz loop, determinism), then M7 (assembler adapte
 | M5.2 | Fixture checks | todo | |
 | M5.3 | Edge fixtures | todo | |
 | M5.4 | Fuzz loop | done | `test/unit/test_fuzz.ml`: stacked byte/truncate/field mutations over four class×order bases; every accessor on every section and segment; 200 per base in `make test`, `make fuzz` runs 100000 (no failures found) |
-| M5.5 | Backend determinism | todo | Check err_trace's Melange packaging first |
+| M5.5 | Backend determinism | done | `test/determinism`: 22 specs (every target, sectioned/bare/high, plus 65K sections) hashed with MD5; native = bytecode (in `make test`) = js_of_ocaml (in `make test-js`). Melange is not covered: the pinned err_trace installs no Melange library (it ships only native/bytecode archives and its sources) |
 
 ### M6 and M7
 
@@ -159,3 +159,4 @@ Q1–Q6 are design §12. Q7 and Q8 are tracker-only.
 - 2026-10-13: M4.7 and M4.8 done: RV64, AArch64, ARM and x86-32 system mode under QEMU.
 - 2026-10-13: Q3 decided (option A) and M4.9 done: x86-64 system mode runs in long mode under QEMU.
 - 2026-10-13: M5.4 done: fuzz loop (100000 mutations per base clean).
+- 2026-10-13: M5.5 done (js_of_ocaml; Melange not available from err_trace).

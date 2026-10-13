@@ -1,0 +1,36 @@
+; Native, bytecode and js_of_ocaml must build identical executables for the same specs. The
+; native/bytecode comparison runs under `make test`; the JavaScript one under `make test-js`.
+; Melange is not covered: the pinned err_trace does not install a Melange library.
+
+(executable
+ (name determinism)
+ (modes exe byte js)
+ (libraries elf elf_test_support err_trace))
+
+(rule
+ (targets native.out)
+ (action
+  (with-stdout-to
+   native.out
+   (run ./determinism.exe))))
+
+(rule
+ (targets bytecode.out)
+ (action
+  (with-stdout-to
+   bytecode.out
+   (run ./determinism.bc))))
+
+(rule
+ (alias runtest)
+ (action
+  (diff native.out bytecode.out)))
+
+; js.out is produced through a shell so `@all` does not need node.
+
+(rule
+ (alias test-js)
+ (deps determinism.bc.js native.out bytecode.out)
+ (action
+  (system
+   "node ./determinism.bc.js > js.out && diff native.out js.out && diff native.out bytecode.out")))
