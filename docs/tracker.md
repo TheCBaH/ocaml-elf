@@ -16,7 +16,7 @@ Last updated: 2026-10-13.
 
 ## Current focus
 
-M5 (parser breadth: fixtures, fuzz loop, determinism), then M7 (assembler adapter). M6 stays deferred.
+All planned tasks done except M6 (deferred) and the items that need hosting or Docker (M0.5–M0.7 unrun).
 
 ## Blockers
 
@@ -110,8 +110,8 @@ M5 (parser breadth: fixtures, fuzz loop, determinism), then M7 (assembler adapte
 | ID | Task | Status | Notes |
 | --- | --- | --- | --- |
 | M6 | `ET_REL` generation | deferred | |
-| M7.1 | Assembler adapter | todo | |
-| M7.2 | Assembler-produced executables | todo | |
+| M7.1 | Assembler adapter | done | `asm/elf_adapter/{elf_adapter.ml{,i},dune}` in the host repository: `Image.plan_of` → `Exec.place` → `Image.bind_image` → `Exec.build`; exports become `STT_NOTYPE` globals. Gated by `ASM_ELF_ADAPTER` (outside the purity audit); elf is compiled from source through the `asm/elf_adapter/elf` symlink because an installed elf resolves err_trace to the opam copy and conflicts with asm's vendored one |
+| M7.2 | Assembler-produced executables | done | `asm/elf_adapter/run_corpus.ml`, `make asm-elf-adapter-test`: all 55 corpus programs (10 cases × the targets each has, 6 architectures) assemble with a `_start` shim, build as ELF and exit with their expected-status.txt under qemu-<arch>. ARM and AArch64 shims write `svc #0` as a word: the assembler has no SVC encoder |
 
 ## Open questions
 
@@ -126,7 +126,7 @@ Q1–Q6 are design §12. Q7 and Q8 are tracker-only.
 | Q5 | AArch64 page size, 64 KiB vs. 4 KiB | open (64 KiB) | M4.1, M4.6 |
 | Q6 | Big-endian generation in scope | open (decode only) | — |
 | Q7 | Keep the draft M1 code, or restart from the design | decided: keep | M1.1–M1.6 |
-| Q8 | License (MIT assumed in `dune-project`) | open | M0.4 |
+| Q8 | License (MIT assumed in `dune-project`) | MIT used in `LICENSE`, holder "The elf authors"; to be confirmed | M0.4 |
 
 ## Decision log
 
@@ -137,6 +137,9 @@ Q1–Q6 are design §12. Q7 and Q8 are tracker-only.
 | 2026-10-13 | Each module has a closed error row; widening is by coercion; payloads are named records | design §4 |
 | 2026-10-13 | All ≥ 32-bit fields are `int64` with unsigned checked arithmetic | design §3.2 |
 | 2026-10-13 | Segments may not share pages; offsets are congruent to vaddr mod `p_align` | design §6.6 |
+| 2026-10-13 | The assembler adapter is gated by `ASM_ELF_ADAPTER` and builds `elf` from source through a symlink; `elf` stays outside the assembler's production closure and purity audit | M7.1 |
+| 2026-10-13 | x86-64 system mode uses an ELF32 Multiboot container with a long-mode stub (Q3) | design §7 |
+| 2026-10-13 | Debian 13 ships `qemu-system-riscv32/64` in `qemu-system-riscv`, not `qemu-system-misc`; docs and Dockerfiles corrected | M3.1 |
 | 2026-10-13 | GAS supplies payload bytes only; tests extract relocation-free sections with `Decode`, not with GNU-linked executables | design §9.3 |
 
 ## Log
