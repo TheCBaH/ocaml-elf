@@ -1,0 +1,5 @@
+(executable
+ (name elf_inspect)
+ (public_name elf-inspect)
+ (package elf)
+ (libraries elf err_trace))

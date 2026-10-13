@@ -1,0 +1,9 @@
+; The portable core: no Unix, no C stubs, no Bigarray. Every target address,
+; offset and size is an int64 bit pattern compared unsigned, so ELF32 addresses
+; above 2^30 and ELF64 values work the same under a 31-bit native int or
+; js_of_ocaml's 32-bit int.
+
+(library
+ (name elf)
+ (public_name elf)
+ (libraries err_trace))
