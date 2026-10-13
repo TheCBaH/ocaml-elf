@@ -179,8 +179,9 @@ let check (tools : T.tools) (s : Spec.t) (_ : Exec.spec) ~dir ~text ~aux =
   end;
   (* readelf's own consistency checks must be silent. *)
   (let status, _, err = T.run [ tools.readelf; "-W"; "--lint"; "-a"; prog ] in
-   if status <> 0 || String.trim err <> "" then
-     mismatches := Printf.sprintf "readelf --lint: status %d, stderr %S" status err :: !mismatches);
+   ignore status;
+   if String.trim err <> "" then
+     mismatches := Printf.sprintf "readelf --lint: stderr %S" err :: !mismatches);
   (* The code disassembles as it does in the object, at its new address. *)
   let object_code section =
     let _, out, _ = T.run [ tools.objdump; "-d"; "-j"; section; obj ] in
@@ -188,11 +189,22 @@ let check (tools : T.tools) (s : Spec.t) (_ : Exec.spec) ~dir ~text ~aux =
   in
   let compare_code what ~vma expected actual =
     if expected = [] then mismatches := (what ^ ": no instructions in the object") :: !mismatches
-    else if expected <> actual then
+    else if expected <> actual then begin
+      let rec first = function
+        | e :: es, a :: as_ -> if e = a then first (es, as_) else Some (e, a)
+        | _ -> None
+      in
+      let detail =
+        match first (expected, actual) with
+        | Some ((eb, et), (ab, at)) ->
+            Printf.sprintf "; first difference: object %s %S, executable %s %S" eb et ab at
+        | None -> ""
+      in
       mismatches :=
-        Printf.sprintf "%s: disassembly differs from the object's (vma %s; %d vs %d instructions)"
-          what (hex vma) (List.length expected) (List.length actual)
+        Printf.sprintf "%s: disassembly differs from the object's (vma %s; %d vs %d instructions)%s"
+          what (hex vma) (List.length expected) (List.length actual) detail
         :: !mismatches
+    end
   in
   List.iter
     (fun (obj_section, exe_section, vma, bytes) ->

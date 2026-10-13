@@ -85,12 +85,12 @@ M0.4–M0.7 (repository files, devcontainer, CI, host integration), then M3 and 
 
 | ID | Task | Status | Notes |
 | --- | --- | --- | --- |
-| M4.1 | Profiles | todo | AArch64 page size pending Q5 |
-| M4.2 | RV64 user | todo | |
-| M4.3 | x86-32 user | todo | |
-| M4.4 | x86-64 user | todo | |
-| M4.5 | ARM user | todo | |
-| M4.6 | AArch64 user | todo | |
+| M4.1 | Profiles | done | profiles were built in M2.1; added `Arm.armv7a_attributes` (GAS golden), used by the ARM test matrix so objdump decodes movw/movt |
+| M4.2 | RV64 user | done | RV64: lp64d and lp64, bases 0x400000 and 0x120000000, all pass under qemu-riscv64 |
+| M4.3 | x86-32 user | done | `payload_x86.ml` (32-bit): exit 42 for all variants and both controls under qemu-i386 |
+| M4.4 | x86-64 user | done | `payload_x86.ml` (64-bit): under qemu-x86_64 |
+| M4.5 | ARM user | done | `payload_arm.ml` (A32, movw/movt): hard and soft e_flags under qemu-arm |
+| M4.6 | AArch64 user | done | `payload_aarch64.ml` (movz/movk): 64 KiB pages under qemu-aarch64 |
 | M4.7 | AArch64 and ARM system | todo | `qemu-system-{aarch64,arm}` present |
 | M4.8 | x86-32 system | todo | `qemu-system-i386` present |
 | M4.9 | x86-64 system | blocked | Q3 |
@@ -155,3 +155,4 @@ Q1–Q6 are design §12. Q7 and Q8 are tracker-only.
 - 2026-10-13: M2.4–M2.6 done: Exec validate, place and build.
 - 2026-10-13: M2.3 and M2.7–M2.10 done: RV32 user-mode matrix passes under qemu-riscv32 (8 runs, 2 negative controls).
 - 2026-10-13: M3 done: RV32 virt system mode passes under qemu-system-riscv32 10.0.13 (4 runs, 3 controls).
+- 2026-10-13: M4.1–M4.6 done: user-mode matrices for all six architectures pass under QEMU (48 runs, including the negative controls).

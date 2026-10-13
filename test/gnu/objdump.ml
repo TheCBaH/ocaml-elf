@@ -15,7 +15,20 @@ let is_branch m =
   && (m.[0] = 'b'
      || m.[0] = 'j'
      || List.mem m
-          [ "call"; "tail"; "cbz"; "cbnz"; "tbz"; "tbnz"; "c.j"; "c.jal"; "c.beqz"; "c.bnez" ])
+          [
+            "call";
+            "tail";
+            "cbz";
+            "cbnz";
+            "tbz";
+            "tbnz";
+            "adr";
+            "adrp";
+            "c.j";
+            "c.jal";
+            "c.beqz";
+            "c.bnez";
+          ])
 
 (* Subtract [vma] from a hex last operand, with or without a 0x prefix. *)
 let rebase ~vma text =
@@ -47,7 +60,7 @@ let instructions ~vma out =
             && String.for_all is_hex (String.sub addr 0 (String.length addr - 1))
           then begin
             let text = String.concat " " (List.map String.trim rest) in
-            let text = String.trim (strip_from (strip_from text " #") " <") in
+            let text = String.trim (strip_from (strip_from (strip_from text " #") " <") "//") in
             let mnemonic =
               match String.index_opt text ' ' with Some i -> String.sub text 0 i | None -> text
             in

@@ -8,3 +8,22 @@ let flags a =
 
 let hard_float = { float_abi = `Hard; attributes = None }
 let soft_float = { float_abi = `Soft; attributes = None }
+
+let armv7a_attributes =
+  [
+    {
+      Attributes.vendor = "aeabi";
+      contents =
+        `Parsed
+          [
+            ( Attributes.File,
+              [
+                (5, Attributes.Ntbs "7-A");
+                (6, Attributes.Uleb 10L);
+                (7, Attributes.Uleb 65L);
+                (8, Attributes.Uleb 1L);
+                (9, Attributes.Uleb 2L);
+              ] );
+          ];
+    };
+  ]

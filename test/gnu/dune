@@ -11,6 +11,9 @@
   spec
   payload
   payload_riscv
+  payload_x86
+  payload_arm
+  payload_aarch64
   structural
   harness)
  (libraries elf elf.unix elf_test_support unix))

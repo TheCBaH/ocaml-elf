@@ -72,6 +72,18 @@ let () =
           Check.equal ~pp:pp_any "find" (Some (Ntbs gas_arch)) (find t ~vendor:"riscv" ~tag:5);
           Check.equal ~pp:pp_any "find missing" None (find t ~vendor:"riscv" ~tag:4);
           Check.equal ~pp:pp_any "find other vendor" None (find t ~vendor:"aeabi" ~tag:5));
+      Check.case "ARMv7-A attributes match GAS output" (fun () ->
+          (* [readelf -x .ARM.attributes] of an empty .text assembled with
+             arm-linux-gnueabihf-as 2.44 -march=armv7-a. *)
+          let gas =
+            of_hex
+              (String.concat ""
+                 (String.split_on_char ' '
+                    "411c0000 00616561 62690001 12000000 05372d41 00060a07 41080109 02"))
+          in
+          Check.bytes_equal "encode" gas (ok "encode" (encode Types.Little Arm.armv7a_attributes));
+          Check.equal ~pp:pp_any "decode" Arm.armv7a_attributes
+            (ok "decode" (decode Types.Little gas)));
       Check.case "hand-assembled layout" (fun () ->
           let bytes = ok "encode" (encode Types.Little [ List.nth sample 1 ]) in
           let expected =
