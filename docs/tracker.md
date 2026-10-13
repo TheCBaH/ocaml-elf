@@ -67,9 +67,9 @@ settled. Whether to keep it as the starting point or delete it is open (Q7).
 | M2.1 | `Target` | done | `target.ml{,i}`, `all` and `arch_of_string`; `test_target` |
 | M2.2 | `Riscv` | done | `riscv.ml{,i}`, `arm.ml{,i}`; profile ISA strings are GAS 2.44's defaults |
 | M2.3 | ISA string | todo | Local GAS 2.44 default: `rv32i2p0_m2p0_a2p0_f2p0_d2p0_zmmul1p0_zaamo1p0_zalrsc1p0` |
-| M2.4 | `Exec` spec and validation | todo | |
-| M2.5 | `Exec.place` | todo | |
-| M2.6 | `Exec.build` | todo | |
+| M2.4 | `Exec` spec and validation | done | `exec.ml{,i}` types and `validate`; `test_exec`; collected as thunks over `Err.Accum`; added `File_too_large` |
+| M2.5 | `Exec.place` | done | `place`, `phdr_count`, `headers_size` (tests in `test_build`) |
+| M2.6 | `Exec.build` | done | `build`; a failing validation becomes `Invalid_spec`; list helpers are tail-recursive so the 65K-section and 65K-segment cases run under js_of_ocaml; `test_build` |
 | M2.7 | `test/gnu` harness | todo | |
 | M2.8 | RV32 payload generator | todo | |
 | M2.9 | Structural checks | todo | `readelf --lint` available (binutils 2.44) |
@@ -156,3 +156,4 @@ Q1–Q6 are design §12. Q7 and Q8 are tracker-only.
 - 2026-10-13: M1.9 and M1.10 done.
 - 2026-10-13: M2.1 and M2.2 done (ahead of M1.12, which needs the arch type).
 - 2026-10-13: M1.12 done: GAS objects for all six architectures agree with readelf.
+- 2026-10-13: M2.4–M2.6 done: Exec validate, place and build.

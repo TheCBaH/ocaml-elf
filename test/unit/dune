@@ -8,5 +8,8 @@
   test_strtab
   test_attributes
   test_malformed
-  test_unix)
+  test_unix
+  test_target
+  test_exec
+  test_build)
  (libraries elf elf.unix elf_test_support err_trace unix))

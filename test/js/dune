@@ -14,7 +14,9 @@
   test_strtab
   test_attributes
   test_malformed
-  test_target)
+  test_target
+  test_exec
+  test_build)
  (modules :standard \ test_unix)
  (modes js)
  (flags
