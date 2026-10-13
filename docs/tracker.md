@@ -33,7 +33,7 @@ All planned tasks done except M6 (deferred) and the items that need hosting or D
 | M0.1 | dune project and opam metadata | done | err_trace pinned at `v0.0.1` via `pin-depends`; package name `elf` pending Q1 |
 | M0.2 | Formatting | done | `.ocamlformat` copied from `asm/`; `@fmt` clean |
 | M0.3 | Makefile | done | |
-| M0.4 | Repository files | done | README (its example is compiled and run by `test/readme`), MIT `LICENSE` (assumed, Q8), `CHANGES.md` |
+| M0.4 | Repository files | done | README (its example is compiled and run by `test/readme`), MIT `LICENSE` |
 | M0.5 | Devcontainer | draft | `.devcontainer/{Dockerfile,devcontainer.json}` written; the image build is not verified here (no Docker) |
 | M0.6 | GitHub Actions | draft | `.github/workflows/ci.yml` written; actionlint is not installed here, so it is unlinted and unrun |
 | M0.7 | Host-repository integration | draft | root `.github/workflows/elf.yml`, `CLAUDE.md` section and `elf-ci`/`elf-test-gnu` Makefile targets written in the host repository, not committed there |
@@ -126,7 +126,7 @@ Q1–Q6 are design §12. Q7 and Q8 are tracker-only.
 | Q5 | AArch64 page size, 64 KiB vs. 4 KiB | open (64 KiB) | M4.1, M4.6 |
 | Q6 | Big-endian generation in scope | open (decode only) | — |
 | Q7 | Keep the draft M1 code, or restart from the design | decided: keep | M1.1–M1.6 |
-| Q8 | License (MIT assumed in `dune-project`) | MIT used in `LICENSE`, holder "The elf authors"; to be confirmed | M0.4 |
+| Q8 | License (MIT assumed in `dune-project`) | MIT used in `LICENSE`, holder Vladimir Silyaev (confirmed) | M0.4 |
 
 ## Decision log
 

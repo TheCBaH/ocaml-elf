@@ -6,9 +6,9 @@
 
 (license MIT)
 
-(authors "The elf authors")
+(authors "Vladimir Silyaev")
 
-(maintainers "The elf authors")
+(maintainers "Vladimir Silyaev")
 
 (source
  (github TheCBaH/ocaml-elf))

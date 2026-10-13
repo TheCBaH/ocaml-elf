@@ -75,7 +75,7 @@ A task is done only when all of these hold:
 ```
 elf/
   Makefile  dune-project  elf.opam  elf.opam.template  .ocamlformat
-  README.md  LICENSE  CHANGES.md
+  README.md  LICENSE
   .devcontainer/{devcontainer.json,Dockerfile}
   .github/workflows/ci.yml
   docs/{design,plan,tracker}.md
@@ -136,7 +136,7 @@ elf/
 
 ### M0.4 Repository files
 
-- **Files:** `README.md`, `LICENSE` (pending Q8), `CHANGES.md`.
+- **Files:** `README.md`, `LICENSE` (pending Q8).
 - **README** covers scope and non-goals (§1), install including the err_trace
   pin, a 20-line example (build an RV32 executable from a spec, write it with
   `Elf_unix`), the test targets, and links to the docs.
