@@ -64,8 +64,8 @@ settled. Whether to keep it as the starting point or delete it is open (Q7).
 
 | ID | Task | Status | Notes |
 | --- | --- | --- | --- |
-| M2.1 | `Target` | todo | |
-| M2.2 | `Riscv` | todo | |
+| M2.1 | `Target` | done | `target.ml{,i}`, `all` and `arch_of_string`; `test_target` |
+| M2.2 | `Riscv` | done | `riscv.ml{,i}`, `arm.ml{,i}`; profile ISA strings are GAS 2.44's defaults |
 | M2.3 | ISA string | todo | Local GAS 2.44 default: `rv32i2p0_m2p0_a2p0_f2p0_d2p0_zmmul1p0_zaamo1p0_zalrsc1p0` |
 | M2.4 | `Exec` spec and validation | todo | |
 | M2.5 | `Exec.place` | todo | |
@@ -154,3 +154,4 @@ Q1–Q6 are design §12. Q7 and Q8 are tracker-only.
 - 2026-10-13: M1.2–M1.4 done.
 - 2026-10-13: M1.5–M1.8 and M1.11 done.
 - 2026-10-13: M1.9 and M1.10 done.
+- 2026-10-13: M2.1 and M2.2 done (ahead of M1.12, which needs the arch type).

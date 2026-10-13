@@ -13,7 +13,8 @@
   test_decode
   test_strtab
   test_attributes
-  test_malformed)
+  test_malformed
+  test_target)
  (modules :standard \ test_unix)
  (modes js)
  (flags
