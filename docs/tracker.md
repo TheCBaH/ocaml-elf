@@ -91,8 +91,8 @@ M0.4–M0.7 (repository files, devcontainer, CI, host integration), then M3 and 
 | M4.4 | x86-64 user | done | `payload_x86.ml` (64-bit): under qemu-x86_64 |
 | M4.5 | ARM user | done | `payload_arm.ml` (A32, movw/movt): hard and soft e_flags under qemu-arm |
 | M4.6 | AArch64 user | done | `payload_aarch64.ml` (movz/movk): 64 KiB pages under qemu-aarch64 |
-| M4.7 | AArch64 and ARM system | todo | `qemu-system-{aarch64,arm}` present |
-| M4.8 | x86-32 system | todo | `qemu-system-i386` present |
+| M4.7 | AArch64 and ARM system | done | AArch64 enters at EL1 and ARM in SVC mode (measured; recorded in design §7); semihosting exit; `Exec.arm_virt_ram`; 26 runs including controls under qemu-system-aarch64/arm |
+| M4.8 | x86-32 system | done | Multiboot ELF32 under qemu-system-i386, isa-debug-exit; statuses 43 and (code<<1) |
 | M4.9 | x86-64 system | blocked | Q3 |
 
 ### M5. Parser breadth and portability
@@ -156,3 +156,4 @@ Q1–Q6 are design §12. Q7 and Q8 are tracker-only.
 - 2026-10-13: M2.3 and M2.7–M2.10 done: RV32 user-mode matrix passes under qemu-riscv32 (8 runs, 2 negative controls).
 - 2026-10-13: M3 done: RV32 virt system mode passes under qemu-system-riscv32 10.0.13 (4 runs, 3 controls).
 - 2026-10-13: M4.1–M4.6 done: user-mode matrices for all six architectures pass under QEMU (48 runs, including the negative controls).
+- 2026-10-13: M4.7 and M4.8 done: RV64, AArch64, ARM and x86-32 system mode under QEMU.

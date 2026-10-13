@@ -67,6 +67,14 @@ let symbols t ~text ~aux =
     sym "data_marker" t.data 4 `Object ".data";
   ]
 
+let x86 t = t.arch = Target.X86_32 || t.arch = Target.X86_64
+
+let multiboot_header t =
+  if t.kind = `System && x86 t then Some (Int64.add t.variant.base 0x1000L) else None
+
+let idt t = if t.kind = `System && x86 t then Some (Int64.add t.stack t.stack_size) else None
+let trap_offset = 0x40L
+
 let exec_spec t ~text ~aux =
   let control = t.control in
   let endian = t.target.endianness in
@@ -98,13 +106,24 @@ let exec_spec t ~text ~aux =
     match t.kind with
     | `User -> []
     | `System ->
+        let idt =
+          match idt t with Some a -> [ section ".idt" a (Exec.Zero 0x100L) ] | None -> []
+        in
         [
           {
             Exec.perms = rw;
             paddr = None;
-            sections = [ section ".stack" t.stack (Exec.Zero t.stack_size) ];
+            sections = section ".stack" t.stack (Exec.Zero t.stack_size) :: idt;
           };
         ]
+  in
+  let multiboot_segments =
+    match multiboot_header t with
+    | None -> []
+    | Some a ->
+        (* magic, flags (0: the loader takes the ELF program headers), checksum *)
+        let hdr = word endian 0x1BADB002l ^ word endian 0l ^ word endian (-0x1BADB002l) in
+        [ { Exec.perms = ro; paddr = None; sections = [ section ".mbhdr" a (Exec.Bytes hdr) ] } ]
   in
   let main_segments : Exec.segment list =
     [
@@ -129,10 +148,12 @@ let exec_spec t ~text ~aux =
     gnu_stack = (match t.kind with `User -> Some rw | `System -> None);
     section_headers = t.variant.sections;
     symbols = (if t.variant.sections then symbols t ~text ~aux else []);
-    segments = main_segments @ stack_segments;
+    segments = multiboot_segments @ main_segments @ stack_segments;
   }
 
 let ram t =
   match (t.kind, t.arch) with
   | `System, (Target.Riscv32 | Target.Riscv64) -> Some Exec.riscv_virt_ram
+  | `System, (Target.Arm | Target.Aarch64) -> Some Exec.arm_virt_ram
+  | `System, (Target.X86_32 | Target.X86_64) -> Some Exec.x86_pc_ram
   | _ -> None

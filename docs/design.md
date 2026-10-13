@@ -505,6 +505,37 @@ must not depend on them.
 - Zero fill: QEMU's loader supplies `memsz - filesz` zero bytes. Checks 13–16 and the dirty
   zero-fill control confirm it, so startup does not clear `.bss`.
 
+**AArch64 and ARM `virt` startup contract** (validated by `test/gnu/run_system.ml`):
+
+- Commands: `qemu-system-aarch64 -M virt -cpu cortex-a53 -nographic -semihosting -kernel FILE` and
+  `qemu-system-arm -M virt -cpu cortex-a15 ...`. QEMU's loader places each `PT_LOAD` at its `paddr`
+  and enters at `e_entry`; RAM starts at `0x4000_0000` and QEMU's boot stub uses its first bytes,
+  so the tests load at `0x4010_0000` (`Exec.arm_virt_ram` is the window).
+- Entry state, measured: AArch64 starts at **EL1** (`CurrentEL` = 1), and ARM in **SVC mode**
+  (`CPSR.M` = `0x13`); no MMU, no stack, no vectors, interrupts masked.
+- Startup sets `sp` immediately after the first instruction (which reads the entry address) and
+  installs a vector table: `VBAR_EL1` (2 KiB aligned, at `text + 0x800`) or `VBAR` (32-byte aligned,
+  at `text + 0x400`). Every vector reports failure code `0x7f`. ARM's handler first reloads `sp`,
+  because an exception runs in a mode whose banked `sp` is unset.
+- Termination is semihosting (`-semihosting`): AArch64 `SYS_EXIT` (`x0 = 0x18`, `x1` → `{0x20026,
+  code}`) via `hlt #0xf000`; ARM `SYS_EXIT_EXTENDED` (`r0 = 0x20`, `r1` → `{0x20026, code}`) via
+  `svc 0x123456`. QEMU exits with `code`: 0 for pass, the failing check's code otherwise.
+
+**x86-32 `pc` startup contract**:
+
+- Command: `qemu-system-i386 -M pc -m 128 -kernel FILE -nographic -serial none -monitor none
+  -device isa-debug-exit,iobase=0xf4,iosize=0x04 -no-reboot`. QEMU's Multiboot loader accepts an
+  ELF32 whose header (`0x1BADB002`, flags 0, checksum) lies in the first 8 KiB of the file; the
+  tests give it its own read-only `.mbhdr` segment one page after the mapped headers. With flags 0
+  the loader uses the ELF program headers, loads at `paddr` and enters at `e_entry`.
+- Entry state (Multiboot): 32-bit protected mode, paging off, flat segments, interrupts off, `esp`
+  undefined. Startup sets `esp` first (so `call`/`pop` can read the PC), then builds a 32-gate IDT
+  in a read/write `.idt` section whose gates all name a trap stub at `text + 0x40`; the stub reports
+  `0x7f`.
+- Termination: `isa-debug-exit` at port `0xf4`. Writing `v` makes QEMU exit with `(v << 1) | 1`; a
+  passing payload writes 21 (status 43) and a failing one the check code.
+- RAM is `[1 MiB, +127 MiB)` (`Exec.x86_pc_ram`).
+
 **Environment note.** The current devcontainer has all six user-mode QEMUs and
 `qemu-system-{aarch64,arm,i386,x86_64}`, but **no `qemu-system-riscv32/64`**,
 because Debian ships those in `qemu-system-riscv`, which is not installed. The

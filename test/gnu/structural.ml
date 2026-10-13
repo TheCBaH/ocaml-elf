@@ -59,9 +59,16 @@ let check (tools : T.tools) (s : Spec.t) (_ : Exec.spec) ~dir ~text ~aux =
   let ehsize = if is64 then 64 else 52 and phentsize = if is64 then 56 else 32 in
   let riscv = s.arch = Riscv32 || s.arch = Riscv64 in
   let system = s.kind = `System in
-  (* loads: five regions (six with a stack), the headers; PHDR; GNU_STACK in user mode only *)
+  let multiboot = Spec.multiboot_header s in
+  (* loads: five regions, plus a stack in system mode and a Multiboot header on x86; the headers;
+     PHDR; GNU_STACK in user mode only; the RISC-V attributes *)
   let phnum =
-    (if system then 6 else 5) + 1 + 1 + (if system then 0 else 1) + if riscv then 1 else 0
+    5
+    + (if system then 1 else 0)
+    + (if multiboot <> None then 1 else 0)
+    + 1 + 1
+    + (if system then 0 else 1)
+    + if riscv then 1 else 0
   in
   let hsize = Int64.of_int (ehsize + (phnum * phentsize)) in
   let page = if s.arch = Aarch64 then 0x10000L else 0x1000L in
@@ -81,14 +88,8 @@ let check (tools : T.tools) (s : Spec.t) (_ : Exec.spec) ~dir ~text ~aux =
   let segs = R.segments (readelf [ "-l" ]) in
   let len b = Int64.of_int (String.length b) in
   let load vaddr filesz memsz flags = ("LOAD", vaddr, filesz, memsz, flags, page) in
-  let expected =
+  let loads =
     [
-      ( "PHDR",
-        Int64.add s.variant.base (Int64.of_int ehsize),
-        Int64.of_int (phnum * phentsize),
-        Int64.of_int (phnum * phentsize),
-        "R",
-        if is64 then 8L else 4L );
       load s.variant.base hsize hsize "R";
       load s.text (len text) (len text) "R E";
       load s.aux (len aux) (len aux) "R E";
@@ -96,9 +97,26 @@ let check (tools : T.tools) (s : Spec.t) (_ : Exec.spec) ~dir ~text ~aux =
       load s.data (Int64.of_int s.data_init) (Int64.add (Int64.of_int s.data_init) s.data_zero) "RW";
       load s.bss 0L s.bss_size "RW";
     ]
-    @
-    if system then [ load s.stack 0L s.stack_size "RW" ]
-    else [ ("GNU_STACK", 0L, 0L, 0L, "RW", 0x10L) ]
+    @ (if system then
+         [
+           load s.stack 0L (Int64.add s.stack_size (if Spec.idt s <> None then 0x100L else 0L)) "RW";
+         ]
+       else [])
+    @ match multiboot with Some a -> [ load a 12L 12L "R" ] | None -> []
+  in
+  (* PT_LOADs ascend by address. *)
+  let loads =
+    List.stable_sort (fun (_, a, _, _, _, _) (_, b, _, _, _, _) -> Int64.unsigned_compare a b) loads
+  in
+  let expected =
+    ( "PHDR",
+      Int64.add s.variant.base (Int64.of_int ehsize),
+      Int64.of_int (phnum * phentsize),
+      Int64.of_int (phnum * phentsize),
+      "R",
+      if is64 then 8L else 4L )
+    :: loads
+    @ if system then [] else [ ("GNU_STACK", 0L, 0L, 0L, "RW", 0x10L) ]
   in
   let row (p : R.segment) = (p.ptype, p.vaddr, p.filesz, p.memsz, p.pflags, p.palign) in
   let describe (t, v, f, m, fl, a) =
@@ -140,6 +158,8 @@ let check (tools : T.tools) (s : Spec.t) (_ : Exec.spec) ~dir ~text ~aux =
     sec_expect ".bss.data" "NOBITS" "WA" (Int64.add s.data (Int64.of_int s.data_init)) s.data_zero;
     sec_expect ".bss" "NOBITS" "WA" s.bss s.bss_size;
     if system then sec_expect ".stack" "NOBITS" "WA" s.stack s.stack_size;
+    (match Spec.idt s with Some a -> sec_expect ".idt" "NOBITS" "WA" a 0x100L | None -> ());
+    (match multiboot with Some a -> sec_expect ".mbhdr" "PROGBITS" "A" a 12L | None -> ());
     sec_expect ".symtab" "SYMTAB" "" 0L (Int64.of_int ((if is64 then 24 else 16) * 5));
     List.iter
       (fun n ->

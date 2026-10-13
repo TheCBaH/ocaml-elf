@@ -124,6 +124,13 @@ type layout
 val riscv_virt_ram : ram
 (** QEMU's RISC-V [virt] machine started with [-m 128M]: [0x8000_0000, +128 MiB). *)
 
+val arm_virt_ram : ram
+(** QEMU's ARM and AArch64 [virt] machines with 128 MiB: [0x4000_0000, +128 MiB). QEMU's boot stub
+    uses the first bytes, so images load above [0x4010_0000]. *)
+
+val x86_pc_ram : ram
+(** QEMU's [pc] machine with 128 MiB, above the legacy hole: [1 MiB, +127 MiB). *)
+
 val validate : ?ram:ram -> spec -> (layout, error list) Err.t
 (** Checks the whole spec and reports every problem, in the order: each segment, then the checks
     across segments, then names and symbols. With [ram], every segment's physical range and the

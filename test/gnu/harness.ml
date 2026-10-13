@@ -76,7 +76,29 @@ let system_command (tools : T.tools) (arch : Target.arch) file =
         "-device";
         "loader,file=" ^ file ^ ",cpu-num=0";
       ]
-  | _ -> Check.failf "no system-mode command for this architecture yet"
+  | Aarch64 ->
+      [ qemu; "-M"; "virt"; "-cpu"; "cortex-a53"; "-nographic"; "-semihosting"; "-kernel"; file ]
+  | Arm ->
+      [ qemu; "-M"; "virt"; "-cpu"; "cortex-a15"; "-nographic"; "-semihosting"; "-kernel"; file ]
+  | X86_32 ->
+      [
+        qemu;
+        "-M";
+        "pc";
+        "-m";
+        "128";
+        "-kernel";
+        file;
+        "-nographic";
+        "-serial";
+        "none";
+        "-monitor";
+        "none";
+        "-device";
+        "isa-debug-exit,iobase=0xf4,iosize=0x04";
+        "-no-reboot";
+      ]
+  | X86_64 -> Check.failf "no system-mode command for x86-64 yet"
 
 let run_system (tools : T.tools) arch ~dir file =
   let status, out, err = T.run ("timeout" :: "20" :: system_command tools arch file) in

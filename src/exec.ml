@@ -423,6 +423,8 @@ let cross_checks ?ram (spec : spec) shape hsize loads =
   List.rev !checks
 
 let riscv_virt_ram = { ram_start = 0x8000_0000L; ram_size = 0x800_0000L }
+let arm_virt_ram = { ram_start = 0x4000_0000L; ram_size = 0x800_0000L }
+let x86_pc_ram = { ram_start = 0x10_0000L; ram_size = 0x7f0_0000L }
 
 let validate ?ram (spec : spec) =
   let t = spec.target in

@@ -49,3 +49,14 @@ val symbols : t -> text:string -> aux:string -> Elf.Exec.symbol list
 
 val ram : t -> Elf.Exec.ram option
 (** The RAM window the executable must fit in: [None] for user mode. *)
+
+val multiboot_header : t -> int64 option
+(** Address of the 12-byte Multiboot header segment ([.mbhdr]): present for x86 system payloads,
+    one page after the mapped headers, so it lies in the first 8 KiB of the file. *)
+
+val idt : t -> int64 option
+(** Address of the 256-byte [.idt] section (right after [.stack]) for x86 system payloads. *)
+
+val trap_offset : int64
+(** Offset from [.text.main] of the trap handler / vector table of the system payloads that need
+    one at a known address. *)
