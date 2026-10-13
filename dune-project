@@ -6,6 +6,10 @@
 
 (license MIT)
 
+(authors "The elf authors")
+
+(maintainers "The elf authors")
+
 (source
  (github TheCBaH/ocaml-elf))
 

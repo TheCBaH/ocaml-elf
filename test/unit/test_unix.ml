@@ -42,5 +42,8 @@ let () =
               Check.error ~pp "write into missing directory" (is_io `Write)
                 (Elf_unix.write_file (Filename.concat dir "no/such/f") "x");
               Check.error ~pp "executable into missing directory" (is_io `Write)
-                (Elf_unix.write_executable (Filename.concat dir "no/such/f") "x")));
+                (Elf_unix.write_executable (Filename.concat dir "no/such/f") "x");
+              (* Writing /dev/null succeeds, but an ordinary user may not chmod it. *)
+              if Unix.geteuid () <> 0 then
+                Check.error ~pp "chmod" (is_io `Chmod) (Elf_unix.write_executable "/dev/null" "x")));
     ]
