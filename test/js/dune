@@ -5,7 +5,15 @@
 (copy_files ../unit/test_*.ml)
 
 (executables
- (names test_u64 test_names test_codec test_encode)
+ (names
+  test_u64
+  test_names
+  test_codec
+  test_encode
+  test_decode
+  test_strtab
+  test_attributes
+  test_malformed)
  (modes js)
  (flags
   (:standard -open Elf))

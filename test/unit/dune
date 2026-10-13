@@ -1,3 +1,11 @@
 (tests
- (names test_u64 test_names test_codec test_encode)
+ (names
+  test_u64
+  test_names
+  test_codec
+  test_encode
+  test_decode
+  test_strtab
+  test_attributes
+  test_malformed)
  (libraries elf elf_test_support err_trace))

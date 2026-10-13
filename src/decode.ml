@@ -10,6 +10,7 @@ type index_use = [ `Shstrndx | `Link of int | `Symbol_section of int * int ]
 type bad_index = { use : index_use; index : int64; count : int }
 type string_ref = { section : int; offset : int64 }
 type wrong_type = { section : int; expected : int64 list; actual : int64 }
+type bad_segment = { segment : int; count : int }
 
 type error =
   [ `Bad_magic
@@ -24,7 +25,9 @@ type error =
   | `Bad_string_offset of string_ref
   | `Unterminated_string of string_ref
   | `Wrong_section_type of wrong_type
-  | `Bad_note of region ]
+  | `Bad_segment_index of bad_segment
+  | `Bad_note of region
+  | Attributes.error ]
 
 let pp_region ppf = function
   | `Ident -> Format.pp_print_string ppf "e_ident"
@@ -64,7 +67,10 @@ let pp_error ppf : error -> unit = function
            ~pp_sep:(fun ppf () -> Format.pp_print_string ppf ", ")
            (fun ppf v -> Format.fprintf ppf "0x%Lx" v))
         expected
+  | `Bad_segment_index { segment; count } ->
+      Format.fprintf ppf "segment %d does not exist (%d segments)" segment count
   | `Bad_note r -> Format.fprintf ppf "%a: malformed note" pp_region r
+  | #Attributes.error as e -> Attributes.pp_error ppf e
 
 let fail e = Err.fail ~pos:__POS__ ~pp_error e
 
@@ -178,6 +184,17 @@ let of_string data =
   let* sections =
     if shstrndx = 0 then Ok (Array.mapi (fun index shdr -> { index; name = ""; shdr }) shdrs)
     else
+      let* () =
+        if shdrs.(shstrndx).sh_type = Const.sht_strtab then Ok ()
+        else
+          fail
+            (`Wrong_section_type
+               {
+                 section = shstrndx;
+                 expected = [ Const.sht_strtab ];
+                 actual = shdrs.(shstrndx).sh_type;
+               })
+      in
       let* strtab = shdr_bytes data shstrndx shdrs.(shstrndx) in
       let+ named =
         Err.List.map
@@ -197,8 +214,12 @@ let find_section t name =
 
 let section_data t s = shdr_bytes t.data s.index s.shdr
 
+let segment t i =
+  if i >= 0 && i < t.phnum then Ok t.phdrs.(i)
+  else fail (`Bad_segment_index { segment = i; count = t.phnum })
+
 let segment_data t i =
-  let p = t.phdrs.(i) in
+  let* p = segment t i in
   raw_bytes t.data (`Segment i) ~offset:p.p_offset ~size:p.p_filesz
 
 let expect_type (s : section) expected =
@@ -327,5 +348,11 @@ let notes t where =
       let* bytes = section_data t s in
       parse_notes (`Section s.index) e ~align:(if s.shdr.sh_addralign = 8L then 8 else 4) bytes
   | `Segment i ->
+      let* p = segment t i in
       let* bytes = segment_data t i in
-      parse_notes (`Segment i) e ~align:(if t.phdrs.(i).p_align = 8L then 8 else 4) bytes
+      parse_notes (`Segment i) e ~align:(if p.p_align = 8L then 8 else 4) bytes
+
+let attributes t s =
+  let* () = expect_type s [ Const.sht_riscv_attributes ] in
+  let* bytes = section_data t s in
+  (Attributes.decode t.header.ident.endianness bytes :> (Attributes.t, error) Err.t)

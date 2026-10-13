@@ -51,8 +51,8 @@ settled. Whether to keep it as the starting point or delete it is open (Q7).
 | M1.2 | `Types`, `Const` | done | `names.ml{,i}`; test enumerates every Const name |
 | M1.3 | `Codec` | done | `test_codec`; Codec stays private, tests compile its source via `copy_files` |
 | M1.4 | `Encode` | done | `test_encode`; message pinned in `errors.t` |
-| M1.5 | `Decode` core | draft | `src/decode.ml{,i}`; extended numbering included |
-| M1.6 | `Decode` accessors | draft | Symbols (+ `SYMTAB_SHNDX`), relocations and notes drafted; `attributes` accessor missing |
+| M1.5 | `Decode` core | done | `test_decode`, extended numbering via `Fixture.many_sections`; shstrtab type is checked |
+| M1.6 | `Decode` accessors | done | added `Bad_segment_index`; `attributes` accessor; Decode.error includes Attributes.error |
 | M1.7 | `Strtab` | todo | |
 | M1.8 | `Attributes` | todo | |
 | M1.9 | `elf.unix` | todo | `unix/` directory exists and is empty |
@@ -152,3 +152,4 @@ Q1–Q6 are design §12. Q7 and Q8 are tracker-only.
   unchanged.
 - 2026-10-13: M0.1–M0.3, M0.8 and M1.1 done; draft M1 code kept (Q7).
 - 2026-10-13: M1.2–M1.4 done.
+- 2026-10-13: M1.5–M1.8 and M1.11 done.

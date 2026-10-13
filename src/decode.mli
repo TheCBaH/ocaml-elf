@@ -19,6 +19,7 @@ type index_use = [ `Shstrndx | `Link of int | `Symbol_section of int * int ]
 type bad_index = { use : index_use; index : int64; count : int }
 type string_ref = { section : int; offset : int64 }
 type wrong_type = { section : int; expected : int64 list; actual : int64 }
+type bad_segment = { segment : int; count : int }
 
 type error =
   [ `Bad_magic
@@ -33,7 +34,9 @@ type error =
   | `Bad_string_offset of string_ref
   | `Unterminated_string of string_ref
   | `Wrong_section_type of wrong_type
-  | `Bad_note of region ]
+  | `Bad_segment_index of bad_segment
+  | `Bad_note of region
+  | Attributes.error ]
 
 val pp_region : Format.formatter -> region -> unit
 val pp_error : Format.formatter -> error -> unit
@@ -78,3 +81,7 @@ val relocations : t -> section -> (rel array, error) Err.t
 type note = { n_type : int64; n_name : string; n_desc : string }
 
 val notes : t -> [ `Section of section | `Segment of int ] -> (note list, error) Err.t
+
+val attributes : t -> section -> (Attributes.t, error) Err.t
+(** Contents of a [.riscv.attributes] or [.ARM.attributes] section ([SHT_*_ATTRIBUTES], one value
+    shared by both architectures). *)
