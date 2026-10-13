@@ -11,6 +11,7 @@ type matrix = {
   payload : (module Elf_gnu.Payload.S);
   base : int64;
   abis : (string * Target.t) list;
+  long_mode : bool;  (** 64-bit code in an ELF32 Multiboot container *)
   pass : int;  (** exit status of a passing payload *)
   fail : int -> int;  (** exit status of a payload that fails check [code] *)
 }
@@ -27,6 +28,7 @@ let matrices =
         [
           ("ilp32d", Target.riscv Riscv.rv32imafd_ilp32d); ("ilp32", Target.riscv Riscv.rv32im_ilp32);
         ];
+      long_mode = false;
       pass = 0;
       fail = identity;
     };
@@ -35,6 +37,7 @@ let matrices =
       base = 0x8000_0000L;
       abis =
         [ ("lp64d", Target.riscv Riscv.rv64imafd_lp64d); ("lp64", Target.riscv Riscv.rv64im_lp64) ];
+      long_mode = false;
       pass = 0;
       fail = identity;
     };
@@ -43,6 +46,17 @@ let matrices =
       payload = Elf_gnu.Payload_x86.make32;
       base = 0x10_0000L;
       abis = [ ("default", Target.x86_32) ];
+      long_mode = false;
+      pass = 43;
+      fail = (fun code -> (code lsl 1) lor 1);
+    };
+    {
+      (* QEMU's Multiboot loader rejects ELF64, so the x86-64 payload is wrapped in an ELF32
+         container (an x86-32 target) whose entry code switches to long mode (design §7). *)
+      payload = Elf_gnu.Payload_x86.make64;
+      base = 0x10_0000L;
+      abis = [ ("long-mode", Target.x86_32) ];
+      long_mode = true;
       pass = 43;
       fail = (fun code -> (code lsl 1) lor 1);
     };
@@ -50,6 +64,7 @@ let matrices =
       payload = Elf_gnu.Payload_aarch64.make;
       base = 0x4010_0000L;
       abis = [ ("default", Target.aarch64 ()) ];
+      long_mode = false;
       pass = 0;
       fail = identity;
     };
@@ -57,6 +72,7 @@ let matrices =
       payload = Elf_gnu.Payload_arm.make;
       base = 0x4010_0000L;
       abis = [ ("hard", arm_v7 Arm.hard_float); ("soft", arm_v7 Arm.soft_float) ];
+      long_mode = false;
       pass = 0;
       fail = identity;
     };
@@ -73,10 +89,10 @@ let name_of arch (v : Elf_gnu.Spec.variant) control =
     | `Dirty_zero_fill -> "-dirty"
     | `Illegal_instruction -> "-trap")
 
-let expect_status ~payload ~target ~variant ~control ~expected =
+let expect_status ~long_mode ~payload ~target ~variant ~control ~expected =
   let (module P : Elf_gnu.Payload.S) = payload in
   let name = name_of P.arch variant control in
-  match H.build ~kind:`System payload ~name ~target ~variant ~control with
+  match H.build ~kind:`System ~long_mode payload ~name ~target ~variant ~control with
   | Error (`Missing tool) -> T.skip_or_fail tool
   | Ok (tools, spec, exec, dir, text, aux) -> (
       if control = `None then Elf_gnu.Structural.check tools spec exec ~dir ~text ~aux;
@@ -100,14 +116,16 @@ let cases (m : matrix) =
   List.map
     (fun (v, target) ->
       Check.case (name_of P.arch v `None) (fun () ->
-          expect_status ~payload:m.payload ~target ~variant:v ~control:`None ~expected:m.pass))
+          expect_status ~long_mode:m.long_mode ~payload:m.payload ~target ~variant:v ~control:`None
+            ~expected:m.pass))
     variants
   @ List.map
       (fun (control, code) ->
         let abi, target = List.hd m.abis in
         let v = { Elf_gnu.Spec.base = m.base; sections = true; abi } in
         Check.case (name_of P.arch v control) (fun () ->
-            expect_status ~payload:m.payload ~target ~variant:v ~control ~expected:(m.fail code)))
+            expect_status ~long_mode:m.long_mode ~payload:m.payload ~target ~variant:v ~control
+              ~expected:(m.fail code)))
       [ (`Flip_rodata, 11); (`Dirty_zero_fill, 13); (`Illegal_instruction, 0x7f) ]
 
 let () = Check.run "run_system" (List.concat_map cases matrices)

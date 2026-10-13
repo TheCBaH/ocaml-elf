@@ -128,6 +128,7 @@ let make64 : (module Payload.S) =
     let arch = Elf.Target.X86_64
 
     let source (s : Spec.t) =
+      let system = s.kind = `System in
       let check (code, addr, marker) =
         [
           Printf.sprintf "\tmov $%d,%%ebx" code;
@@ -139,18 +140,153 @@ let make64 : (module Payload.S) =
         | Some m -> [ Printf.sprintf "\tcmp $%s,%%ecx" (hex32 m); "\tjne .Lfail" ]
         | None -> [ "\ttest %ecx,%ecx"; "\tjnz .Lfail" ]
       in
+      let text_at off = Int64.add s.text off in
+      (* System mode. QEMU's Multiboot loader accepts only ELF32, so the 64-bit payload sits in an
+         ELF32 container whose 32-bit entry code builds identity page tables for the low 1 GiB
+         (2 MiB pages), enables long mode and jumps to the 64-bit code at text+0x400. The layout
+         inside .text.main is fixed by .org, so every address below is an absolute constant:
+         0x000 the 32-bit stub, 0x200 the GDT and its pointer, 0x300 the trap handler, 0x400 the
+         64-bit code. The container loads below 1 GiB, which the page tables cover. *)
+      let stub32 () =
+        let pt = Option.get (Spec.page_tables s) in
+        [
+          "\t.code32";
+          Printf.sprintf "\tmov $%s,%%esp" (hex64 (Int64.add s.stack s.stack_size));
+          "\tcall 1f";
+          "1:\tpop %eax";
+          "\tmov $10,%esi";
+          Printf.sprintf "\tcmp $%s,%%eax" (hex64 (text_at 10L));
+          "\tjne .Lfail32";
+          (* PML4[0] -> PDPT, PDPT[0] -> PD, PD[i] = i * 2 MiB (present, writable, 2 MiB page). *)
+          Printf.sprintf "\tmov $%s,%%edi" (hex64 pt);
+          "\tlea 0x1000(%edi),%eax";
+          "\tor $3,%eax";
+          "\tmov %eax,(%edi)";
+          "\tlea 0x2000(%edi),%eax";
+          "\tor $3,%eax";
+          "\tmov %eax,0x1000(%edi)";
+          "\tlea 0x2000(%edi),%edi";
+          "\tmov $0x83,%eax";
+          "\tmov $512,%ecx";
+          "2:\tmov %eax,(%edi)";
+          "\tadd $0x200000,%eax";
+          "\tadd $8,%edi";
+          "\tdec %ecx";
+          "\tjnz 2b";
+          Printf.sprintf "\tlgdt %s" (hex64 (text_at 0x220L));
+          "\tmov %cr4,%eax";
+          "\tor $0x20,%eax";
+          "\tmov %eax,%cr4";
+          Printf.sprintf "\tmov $%s,%%eax" (hex64 pt);
+          "\tmov %eax,%cr3";
+          "\tmov $0xc0000080,%ecx";
+          "\trdmsr";
+          "\tor $0x100,%eax";
+          "\twrmsr";
+          "\tmov %cr0,%eax";
+          "\tor $0x80000000,%eax";
+          "\tmov %eax,%cr0";
+          Printf.sprintf "\tljmp $0x08,$%s" (hex64 (text_at 0x400L));
+          ".Lfail32:";
+          "\tmov $0xf4,%dx";
+          "\tmov %esi,%eax";
+          "\tout %eax,%dx";
+          "7:\thlt";
+          "\tjmp 7b";
+          "\t.org 0x200";
+          (* null, 64-bit code (selector 0x08), data (selector 0x10), then the GDT pointer *)
+          "\t.quad 0";
+          "\t.quad 0x00209a0000000000";
+          "\t.quad 0x0000920000000000";
+          "\t.org 0x220";
+          Printf.sprintf "\t.word 23\n\t.long %s" (hex64 (text_at 0x200L));
+          "\t.org 0x300";
+          "\t.code64";
+          ".Ltrap:";
+          "\tmov $0x7f,%ebx";
+          "\tjmp .Lfail";
+          "\t.org 0x400";
+        ]
+      in
+      let entry64 =
+        if system then
+          let idt = Option.get (Spec.idt s) in
+          [
+            ".Llong:";
+            "\tmov $0x10,%eax";
+            "\tmov %eax,%ds";
+            "\tmov %eax,%es";
+            "\tmov %eax,%ss";
+            Printf.sprintf "\tmov $%s,%%esp" (hex64 (Int64.add s.stack s.stack_size));
+            "\tlea .Llong(%rip),%rax";
+            "\tmov $10,%ebx";
+            Printf.sprintf "\tmovabs $%s,%%rcx" (hex64 (text_at 0x400L));
+            "\tcmp %rcx,%rax";
+            "\tjne .Lfail";
+            (* 32 interrupt gates: (selector 8 << 16 | offset low), (offset mid << 16 | 0x8e00),
+               offset high, 0. *)
+            Printf.sprintf "\tmov $%s,%%ebx" (hex64 (text_at 0x300L));
+            "\tmovzwl %bx,%eax";
+            "\tor $0x80000,%eax";
+            "\tmov %ebx,%edx";
+            "\tand $0xffff0000,%edx";
+            "\tor $0x8e00,%edx";
+            Printf.sprintf "\tmov $%s,%%edi" (hex64 idt);
+            "\tmov $32,%ecx";
+            "3:\tmov %eax,(%rdi)";
+            "\tmov %edx,4(%rdi)";
+            "\tmovl $0,8(%rdi)";
+            "\tmovl $0,12(%rdi)";
+            "\tadd $16,%rdi";
+            "\tdec %ecx";
+            "\tjnz 3b";
+            "\tsub $16,%rsp";
+            "\tmovw $511,(%rsp)";
+            Printf.sprintf "\tmovq $%s,2(%%rsp)" (hex64 idt);
+            "\tlidt (%rsp)";
+            "\tadd $16,%rsp";
+          ]
+          @ if s.control = `Illegal_instruction then [ "\tud2" ] else []
+        else
+          [
+            ".Lstart:";
+            "\tlea .Lstart(%rip),%rax";
+            "\tmov $10,%ebx";
+            Printf.sprintf "\tmovabs $%s,%%rcx" (hex64 s.text);
+            "\tcmp %rcx,%rax";
+            "\tjne .Lfail";
+          ]
+      in
+      let finish =
+        if system then
+          [
+            "\tmov $0xf4,%edx";
+            "\tmov $21,%eax";
+            "\tout %eax,%dx";
+            "5:\thlt";
+            "\tjmp 5b";
+            ".Lfail:";
+            "\tmov $0xf4,%edx";
+            "\tmov %ebx,%eax";
+            "\tout %eax,%dx";
+            "6:\thlt";
+            "\tjmp 6b";
+          ]
+        else
+          [
+            "\tmov $42,%edi";
+            "\tmov $60,%eax";
+            "\tsyscall";
+            ".Lfail:";
+            "\tmov %ebx,%edi";
+            "\tmov $60,%eax";
+            "\tsyscall";
+          ]
+      in
       String.concat "\n"
-        ([
-           "\t.section .text.main,\"ax\"";
-           "\t.globl _start";
-           "_start:";
-           ".Lstart:";
-           "\tlea .Lstart(%rip),%rax";
-           "\tmov $10,%ebx";
-           Printf.sprintf "\tmovabs $%s,%%rcx" (hex64 s.text);
-           "\tcmp %rcx,%rax";
-           "\tjne .Lfail";
-         ]
+        ([ "\t.section .text.main,\"ax\""; "\t.globl _start"; "_start:" ]
+        @ (if system then stub32 () else [])
+        @ entry64
         @ List.concat_map check (word_checks s)
         @ [
             "\tmov $17,%ebx";
@@ -165,14 +301,11 @@ let make64 : (module Payload.S) =
             "\tcall *%rcx";
             Printf.sprintf "\tcmp $%s,%%eax" (hex32 s.markers.aux);
             "\tjne .Lfail";
-            "\tmov $42,%edi";
-            "\tmov $60,%eax";
-            "\tsyscall";
-            ".Lfail:";
-            "\tmov %ebx,%edi";
-            "\tmov $60,%eax";
-            "\tsyscall";
+          ]
+        @ finish
+        @ [
             "\t.section .text.aux,\"ax\"";
+            "\t.code64";
             "\t.globl aux";
             "aux:";
             Printf.sprintf "\tmov $%s,%%eax" (hex32 s.markers.aux);

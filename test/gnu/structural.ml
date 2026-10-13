@@ -12,14 +12,17 @@ let write path data =
 
 let hex v = Printf.sprintf "0x%Lx" v
 
-let objdump_machine (arch : Target.arch) =
-  match arch with
-  | X86_32 -> "i386"
-  | X86_64 -> "i386:x86-64"
-  | Arm -> "arm"
-  | Aarch64 -> "aarch64"
-  | Riscv32 -> "riscv:rv32"
-  | Riscv64 -> "riscv:rv64"
+let objdump_machine (s : Spec.t) =
+  (* A long-mode payload sits in an ELF32 container, but its bytes are 64-bit code. *)
+  if s.long_mode then "i386:x86-64"
+  else
+    match s.arch with
+    | X86_32 -> "i386"
+    | X86_64 -> "i386:x86-64"
+    | Arm -> "arm"
+    | Aarch64 -> "aarch64"
+    | Riscv32 -> "riscv:rv32"
+    | Riscv64 -> "riscv:rv64"
 
 (* What readelf prints for these fields, written out per architecture rather than derived from the
    library's own profile. *)
@@ -97,11 +100,7 @@ let check (tools : T.tools) (s : Spec.t) (_ : Exec.spec) ~dir ~text ~aux =
       load s.data (Int64.of_int s.data_init) (Int64.add (Int64.of_int s.data_init) s.data_zero) "RW";
       load s.bss 0L s.bss_size "RW";
     ]
-    @ (if system then
-         [
-           load s.stack 0L (Int64.add s.stack_size (if Spec.idt s <> None then 0x100L else 0L)) "RW";
-         ]
-       else [])
+    @ (if system then [ load s.stack 0L (Spec.stack_segment_size s) "RW" ] else [])
     @ match multiboot with Some a -> [ load a 12L 12L "R" ] | None -> []
   in
   (* PT_LOADs ascend by address. *)
@@ -158,7 +157,12 @@ let check (tools : T.tools) (s : Spec.t) (_ : Exec.spec) ~dir ~text ~aux =
     sec_expect ".bss.data" "NOBITS" "WA" (Int64.add s.data (Int64.of_int s.data_init)) s.data_zero;
     sec_expect ".bss" "NOBITS" "WA" s.bss s.bss_size;
     if system then sec_expect ".stack" "NOBITS" "WA" s.stack s.stack_size;
-    (match Spec.idt s with Some a -> sec_expect ".idt" "NOBITS" "WA" a 0x100L | None -> ());
+    (match Spec.idt s with
+    | Some a -> sec_expect ".idt" "NOBITS" "WA" a (Spec.idt_size s)
+    | None -> ());
+    (match Spec.page_tables s with
+    | Some a -> sec_expect ".pt" "NOBITS" "WA" a 0x3000L
+    | None -> ());
     (match multiboot with Some a -> sec_expect ".mbhdr" "PROGBITS" "A" a 12L | None -> ());
     sec_expect ".symtab" "SYMTAB" "" 0L (Int64.of_int ((if is64 then 24 else 16) * 5));
     List.iter
@@ -203,8 +207,9 @@ let check (tools : T.tools) (s : Spec.t) (_ : Exec.spec) ~dir ~text ~aux =
    if String.trim err <> "" then
      mismatches := Printf.sprintf "readelf --lint: stderr %S" err :: !mismatches);
   (* The code disassembles as it does in the object, at its new address. *)
+  let force_machine = if s.long_mode then [ "-m"; "i386:x86-64" ] else [] in
   let object_code section =
-    let _, out, _ = T.run [ tools.objdump; "-d"; "-j"; section; obj ] in
+    let _, out, _ = T.run ([ tools.objdump ] @ force_machine @ [ "-d"; "-j"; section; obj ]) in
     Objdump.instructions ~vma:0L out
   in
   let compare_code what ~vma expected actual =
@@ -230,7 +235,9 @@ let check (tools : T.tools) (s : Spec.t) (_ : Exec.spec) ~dir ~text ~aux =
     (fun (obj_section, exe_section, vma, bytes) ->
       let expected = object_code obj_section in
       if s.variant.sections then begin
-        let _, out, _ = T.run [ tools.objdump; "-d"; "-j"; exe_section; prog ] in
+        let _, out, _ =
+          T.run ([ tools.objdump ] @ force_machine @ [ "-d"; "-j"; exe_section; prog ])
+        in
         compare_code exe_section ~vma expected (Objdump.instructions ~vma out)
       end
       else begin
@@ -247,7 +254,7 @@ let check (tools : T.tools) (s : Spec.t) (_ : Exec.spec) ~dir ~text ~aux =
               "-b";
               "binary";
               "-m";
-              objdump_machine s.arch;
+              objdump_machine s;
               "-D";
               "--adjust-vma=" ^ hex vma;
               bin;

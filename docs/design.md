@@ -479,7 +479,7 @@ sequence does not become bare-metal output or termination.
 | AArch64 | `virt`, `-cpu cortex-a53` | `-kernel` ELF, or the generic loader | `0x4000_0000` | Semihosting `SYS_EXIT` (`-semihosting`) |
 | ARM32 | `virt` | as AArch64 | `0x4000_0000` | Semihosting `SYS_EXIT` |
 | x86-32 | `pc` | `-kernel` with a Multiboot header in the first 8 KiB (QEMU's Multiboot loader accepts ELF32) | ≥ 1 MiB | `isa-debug-exit` (`iobase=0xf4`): exit status `(v << 1) \| 1` |
-| x86-64 | `pc` | Open: QEMU's Multiboot loader rejects ELF64. Candidates are an ELF32 Multiboot container with a 32-bit trampoline that enables long mode, or the generic loader. | ≥ 1 MiB | `isa-debug-exit` |
+| x86-64 | `pc` | An ELF32 Multiboot container (`EM_386`) with a 32-bit entry stub that enables long mode and jumps to the 64-bit payload (decided, Q3; QEMU's Multiboot loader rejects ELF64) | ≥ 1 MiB | `isa-debug-exit` |
 
 The startup contract per profile is part of the profile's documentation. It
 covers privilege mode, stack setup, trap handling (at minimum, a trap reports
@@ -535,6 +535,21 @@ must not depend on them.
 - Termination: `isa-debug-exit` at port `0xf4`. Writing `v` makes QEMU exit with `(v << 1) | 1`; a
   passing payload writes 21 (status 43) and a failing one the check code.
 - RAM is `[1 MiB, +127 MiB)` (`Exec.x86_pc_ram`).
+
+**x86-64 `pc` startup contract** (Q3, option A; validated by `test/gnu/run_system.ml`):
+
+- QEMU's Multiboot loader rejects ELF64 ("Cannot load x86-64 image, give a 32bit one"), so the
+  payload is wrapped in an ELF32 container with the x86-32 profile. The container's own entry is a
+  32-bit stub; the 64-bit code is an ordinary section of that file. The library's ELF64 output is
+  covered by user mode; system mode covers the 64-bit code and the switch.
+- The stub (entered as for x86-32) sets `esp`, builds identity page tables for the low 1 GiB with
+  2 MiB pages in a 4 KiB-aligned `.pt` section (PML4, PDPT, PD), loads a three-entry GDT
+  (null, 64-bit code `0x08`, data `0x10`), sets `CR4.PAE`, `CR3`, `EFER.LME` and `CR0.PG`, and jumps
+  through selector `0x08`. The container must therefore load below 1 GiB.
+- The 64-bit code reloads the data segments and `rsp`, builds a 32-gate 64-bit IDT (`lidt`) whose
+  gates all name a trap stub reporting `0x7f`, and terminates through `isa-debug-exit` as in x86-32.
+- Inside `.text.main` the offsets are fixed with `.org`: `0x000` stub, `0x200` GDT, `0x220` its
+  pointer, `0x300` trap stub, `0x400` the 64-bit code, so every address is an absolute constant.
 
 **Environment note.** The current devcontainer has all six user-mode QEMUs and
 `qemu-system-{aarch64,arm,i386,x86_64}`, but **no `qemu-system-riscv32/64`**,
@@ -777,9 +792,8 @@ features. Their record types stay representable (the decoder reads
    taken on GitHub.
 2. **err_trace version pinning.** Pin the `v0.0.1` tag, as now, or track
    `main` until err_trace's API settles.
-3. **x86-64 system-mode route** (§7): an ELF32 Multiboot container with a
-   long-mode trampoline, versus the generic loader with a custom reset
-   contract.
+3. **x86-64 system-mode route** (§7): *decided*: an ELF32 Multiboot container with a
+   long-mode trampoline.
 4. **Canonical RISC-V ISA strings:** whether to implement the implied-extension
    expansion (`m → zmmul`, `a → zaamo + zalrsc`, `f → zicsr`, …) or keep
    profiles explicit as proposed.

@@ -16,13 +16,13 @@ Last updated: 2026-10-13.
 
 ## Current focus
 
-M0.4–M0.7 (repository files, devcontainer, CI, host integration), then M3 and M4.
+M5 (parser breadth: fixtures, fuzz loop, determinism), then M7 (assembler adapter). M6 stays deferred.
 
 ## Blockers
 
 | What | Blocks | Resolution |
 | --- | --- | --- |
-| x86-64 system-mode route undecided | M4.9 | Q3 |
+| (none) | | |
 
 ## Status
 
@@ -93,7 +93,7 @@ M0.4–M0.7 (repository files, devcontainer, CI, host integration), then M3 and 
 | M4.6 | AArch64 user | done | `payload_aarch64.ml` (movz/movk): 64 KiB pages under qemu-aarch64 |
 | M4.7 | AArch64 and ARM system | done | AArch64 enters at EL1 and ARM in SVC mode (measured; recorded in design §7); semihosting exit; `Exec.arm_virt_ram`; 26 runs including controls under qemu-system-aarch64/arm |
 | M4.8 | x86-32 system | done | Multiboot ELF32 under qemu-system-i386, isa-debug-exit; statuses 43 and (code<<1) |
-| M4.9 | x86-64 system | blocked | Q3 |
+| M4.9 | x86-64 system | done | Q3 decided: option A (ELF32 Multiboot container with a long-mode stub, design §7); 6 runs incl. controls (statuses 43, 23, 27, 255) under qemu-system-x86_64 |
 
 ### M5. Parser breadth and portability
 
@@ -121,7 +121,7 @@ Q1–Q6 are design §12. Q7 and Q8 are tracker-only.
 | --- | --- | --- | --- |
 | Q1 | Project/package name (`ocaml-elf` is taken on GitHub) | open | M0.4, M0.6 |
 | Q2 | err_trace: stay on `v0.0.1` or track `main` | open (pinned `v0.0.1`) | — |
-| Q3 | x86-64 system-mode route | open | M4.9 |
+| Q3 | x86-64 system-mode route | decided: ELF32 Multiboot container with a long-mode stub | — |
 | Q4 | RISC-V implied-extension expansion vs. explicit profiles | open (explicit) | M2.3 |
 | Q5 | AArch64 page size, 64 KiB vs. 4 KiB | open (64 KiB) | M4.1, M4.6 |
 | Q6 | Big-endian generation in scope | open (decode only) | — |
@@ -157,3 +157,4 @@ Q1–Q6 are design §12. Q7 and Q8 are tracker-only.
 - 2026-10-13: M3 done: RV32 virt system mode passes under qemu-system-riscv32 10.0.13 (4 runs, 3 controls).
 - 2026-10-13: M4.1–M4.6 done: user-mode matrices for all six architectures pass under QEMU (48 runs, including the negative controls).
 - 2026-10-13: M4.7 and M4.8 done: RV64, AArch64, ARM and x86-32 system mode under QEMU.
+- 2026-10-13: Q3 decided (option A) and M4.9 done: x86-64 system mode runs in long mode under QEMU.

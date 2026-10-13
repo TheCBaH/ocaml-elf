@@ -8,6 +8,7 @@ type run = {
 
 val build :
   ?kind:Spec.kind ->
+  ?long_mode:bool ->
   (module Payload.S) ->
   name:string ->
   target:Elf.Target.t ->

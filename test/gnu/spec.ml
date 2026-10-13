@@ -20,13 +20,14 @@ type t = {
   markers : markers;
   kind : kind;
   control : control;
+  long_mode : bool;
   stack : int64;
   stack_size : int64;
 }
 
 let arch_of (t : Target.t) = t.arch
 
-let make ?(kind = `User) ?(control = `None) target variant =
+let make ?(kind = `User) ?(control = `None) ?(long_mode = false) target variant =
   let at k = Int64.add variant.base (Int64.mul 0x10000L (Int64.of_int k)) in
   {
     arch = arch_of target;
@@ -42,6 +43,7 @@ let make ?(kind = `User) ?(control = `None) target variant =
     bss_size = 0x2000L;
     kind;
     control;
+    long_mode;
     stack = at 6;
     stack_size = 0x1000L;
     (* Below 0x8000_0000, so a sign-extending 32-bit load cannot change a comparison. *)
@@ -74,6 +76,16 @@ let multiboot_header t =
 
 let idt t = if t.kind = `System && x86 t then Some (Int64.add t.stack t.stack_size) else None
 let trap_offset = 0x40L
+let idt_size t = if t.long_mode then 0x200L else 0x100L
+
+let page_tables t =
+  if t.kind = `System && t.long_mode then Some (Int64.add t.stack 0x2000L) else None
+
+let stack_segment_size t =
+  match (page_tables t, idt t) with
+  | Some _, _ -> 0x5000L
+  | None, Some _ -> Int64.add t.stack_size (idt_size t)
+  | None, None -> t.stack_size
 
 let exec_spec t ~text ~aux =
   let control = t.control in
@@ -107,13 +119,18 @@ let exec_spec t ~text ~aux =
     | `User -> []
     | `System ->
         let idt =
-          match idt t with Some a -> [ section ".idt" a (Exec.Zero 0x100L) ] | None -> []
+          match idt t with Some a -> [ section ".idt" a (Exec.Zero (idt_size t)) ] | None -> []
+        in
+        let pt =
+          match page_tables t with
+          | Some a -> [ { (section ".pt" a (Exec.Zero 0x3000L)) with align = 0x1000L } ]
+          | None -> []
         in
         [
           {
             Exec.perms = rw;
             paddr = None;
-            sections = section ".stack" t.stack (Exec.Zero t.stack_size) :: idt;
+            sections = (section ".stack" t.stack (Exec.Zero t.stack_size) :: idt) @ pt;
           };
         ]
   in

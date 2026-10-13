@@ -23,11 +23,11 @@ let check_relocation_free name (d : Decode.t) payload_sections =
             name s.name d.sections.(target).name)
     d.sections
 
-let build ?(kind = `User) (module P : Payload.S) ~name ~target ~variant ~control =
+let build ?(kind = `User) ?long_mode (module P : Payload.S) ~name ~target ~variant ~control =
   match T.find ~abi:variant.Spec.abi P.arch with
   | Error _ as e -> e
   | Ok tools ->
-      let spec = Spec.make ~kind ~control target variant in
+      let spec = Spec.make ~kind ~control ?long_mode target variant in
       let dir = T.artifacts name in
       let src = Filename.concat dir "payload.s" and obj = Filename.concat dir "payload.o" in
       write src (P.source spec);
@@ -80,7 +80,7 @@ let system_command (tools : T.tools) (arch : Target.arch) file =
       [ qemu; "-M"; "virt"; "-cpu"; "cortex-a53"; "-nographic"; "-semihosting"; "-kernel"; file ]
   | Arm ->
       [ qemu; "-M"; "virt"; "-cpu"; "cortex-a15"; "-nographic"; "-semihosting"; "-kernel"; file ]
-  | X86_32 ->
+  | X86_32 | X86_64 ->
       [
         qemu;
         "-M";
@@ -98,7 +98,6 @@ let system_command (tools : T.tools) (arch : Target.arch) file =
         "isa-debug-exit,iobase=0xf4,iosize=0x04";
         "-no-reboot";
       ]
-  | X86_64 -> Check.failf "no system-mode command for x86-64 yet"
 
 let run_system (tools : T.tools) arch ~dir file =
   let status, out, err = T.run ("timeout" :: "20" :: system_command tools arch file) in

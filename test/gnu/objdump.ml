@@ -62,7 +62,30 @@ let instructions ~vma out =
             let text = String.concat " " (List.map String.trim rest) in
             let text = String.trim (strip_from (strip_from (strip_from text " #") " <") "//") in
             let mnemonic =
-              match String.index_opt text ' ' with Some i -> String.sub text 0 i | None -> text
+              (* skip prefixes that objdump prints as separate words *)
+              let is_prefix w =
+                (String.length w >= 3 && String.sub w 0 3 = "rex")
+                || List.mem w
+                     [
+                       "lock";
+                       "rep";
+                       "repz";
+                       "repnz";
+                       "data16";
+                       "addr32";
+                       "notrack";
+                       "bnd";
+                       "cs";
+                       "ds";
+                       "es";
+                       "ss";
+                       "fs";
+                       "gs";
+                     ]
+              in
+              match List.find_opt (fun w -> not (is_prefix w)) (String.split_on_char ' ' text) with
+              | Some w -> w
+              | None -> text
             in
             Some (String.trim bytes, if is_branch mnemonic then rebase ~vma text else text)
           end

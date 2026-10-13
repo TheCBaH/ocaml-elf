@@ -32,11 +32,13 @@ type t = {
   markers : markers;
   kind : kind;
   control : control;
+  long_mode : bool;
+      (** system payload of 64-bit code in an ELF32 Multiboot container, which enters long mode *)
   stack : int64;  (** a read/write zero-filled region the system payload uses as its stack *)
   stack_size : int64;
 }
 
-val make : ?kind:kind -> ?control:control -> Elf.Target.t -> variant -> t
+val make : ?kind:kind -> ?control:control -> ?long_mode:bool -> Elf.Target.t -> variant -> t
 
 val exec_spec : t -> text:string -> aux:string -> Elf.Exec.spec
 (** The executable for [t] (including its [control]) around the assembled code. Rodata and data bytes come from [t] in the
@@ -60,3 +62,13 @@ val idt : t -> int64 option
 val trap_offset : int64
 (** Offset from [.text.main] of the trap handler / vector table of the system payloads that need
     one at a known address. *)
+
+val idt_size : t -> int64
+(** 0x100 for 32-bit gates, 0x200 for the 64-bit gates of a long-mode payload. *)
+
+val page_tables : t -> int64 option
+(** Address of the 0x3000-byte [.pt] section (PML4, PDPT, PD; 4 KiB aligned) of a long-mode
+    payload. *)
+
+val stack_segment_size : t -> int64
+(** Memory size of the read/write segment holding [.stack] (and [.idt], [.pt] when present). *)
