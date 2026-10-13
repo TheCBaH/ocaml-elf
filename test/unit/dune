@@ -11,5 +11,6 @@
   test_unix
   test_target
   test_exec
-  test_build)
+  test_build
+  test_fuzz)
  (libraries elf elf.unix elf_test_support err_trace unix))

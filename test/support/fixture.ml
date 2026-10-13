@@ -215,9 +215,11 @@ let many_sections ?(cls = Elf32) ?(endian = Little) n =
 (* {1 Mutators} *)
 
 let ident_of s =
+  (* A truncated file has no class or byte-order byte: fall back to ELF32 little-endian. *)
+  let byte i = if i < String.length s then Char.code s.[i] else 0 in
   {
-    elf_class = (if Char.code s.[4] = 2 then Elf64 else Elf32);
-    endianness = (if Char.code s.[5] = 2 then Big else Little);
+    elf_class = (if byte 4 = 2 then Elf64 else Elf32);
+    endianness = (if byte 5 = 2 then Big else Little);
     osabi = 0;
     abiversion = 0;
   }

@@ -16,7 +16,8 @@
   test_malformed
   test_target
   test_exec
-  test_build)
+  test_build
+  test_fuzz)
  (modules :standard \ test_unix)
  (modes js)
  (flags
