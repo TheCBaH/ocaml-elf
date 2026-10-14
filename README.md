@@ -1,5 +1,7 @@
 # elf
 
+[![ci](https://github.com/TheCBaH/ocaml-elf/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/TheCBaH/ocaml-elf/actions/workflows/ci.yml?query=branch%3Amain)
+
 A small pure-OCaml library that reads ELF32/ELF64 files and writes static `ET_EXEC` executables
 for x86-32, x86-64, ARM32, AArch64, RV32 and RV64.
 
@@ -60,6 +62,8 @@ Run the result with `qemu-riscv32 ./hello; echo $?`.
 Inspect any ELF file with `elf-inspect --all FILE`.
 
 ## Tests
+
+Use the [devcontainer](https://github.com/TheCBaH/ocaml-elf/tree/main/.devcontainer); [CI](https://github.com/TheCBaH/ocaml-elf/actions/workflows/ci.yml?query=branch%3Amain) runs every leg inside the same image.
 
 | Command | What it runs |
 | --- | --- |
