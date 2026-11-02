@@ -1,5 +1,5 @@
 x-ai-disclosure: "ai-generated"
 x-ai-provider: "Anthropic, OpenAI"
 pin-depends: [
-  ["err_trace.dev" "git+https://github.com/TheCBaH/err_trace.git#v0.0.1"]
+  ["err_trace.0.1.0" "git+https://github.com/TheCBaH/err_trace.git#1c7a6ba94c81c70008c594c709e7d37feb38f435"]
 ]
